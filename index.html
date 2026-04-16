@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Earnings Calendar — Inversiones Adriana</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Base surfaces */
+  --bg:#0d1117;--sf:#151b23;--sf2:#1c2129;--sf3:#212830;
+  --bd:#2d333b;--bd2:#3d444d;
+  /* Text hierarchy - optimized for legibility */
+  --t0:#f0f3f6;--t1:#d1d7de;--t2:#9ea7b3;--t3:#768390;--t4:#545d68;--t5:#3d444d;
+  /* Functional colors - reduced institutional palette */
+  --gn:#3d8b5e;--gnb:#0a1610;--gnd:#1a4a30;
+  --rd:#c44040;--rdb:#1a0a0a;--rdd:#6b2525;
+  --yw:#c19a3e;--ywb:#171208;--ywd:#7a5c1e;
+  --bl:#5a8ac0;--blb:#0c1520;--bld:#1a3555;
+  --pp:#8a9bb0;--cy:#6d96b8;
+  /* Fonts */
+  --mn:'JetBrains Mono',monospace;--sn:'Figtree',system-ui,sans-serif
+}
+body{background:var(--bg);color:var(--t0);font-family:var(--sn);min-height:100vh;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+
+/* ─── Header ─── */
+.hdr{background:var(--sf);border-bottom:1px solid var(--bd);padding:18px 32px 16px}
+.hi{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.brand{font-family:var(--mn);font-size:10px;color:var(--t3);letter-spacing:.18em;text-transform:uppercase;font-weight:500}
+h1{font-size:18px;font-weight:700;letter-spacing:-.01em;margin-top:2px;color:var(--t0)}
+.sub{color:var(--t3);font-size:12px;margin-top:3px;font-weight:400}
+.conn{font-size:10px;color:var(--t4);display:flex;align-items:center;gap:4px;margin-top:4px;font-family:var(--mn);font-weight:400}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:2px}
+.ar{display:flex;gap:12px;flex-wrap:wrap;font-size:10px;color:var(--t4);margin-top:1px;font-family:var(--mn)}
+
+/* ─── KPI boxes ─── */
+.sts{display:flex;gap:8px;flex-wrap:wrap}
+.sb{background:var(--sf2);border:1px solid var(--bd);border-radius:3px;padding:8px 14px;min-width:100px}
+.sl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.12em;font-family:var(--mn);margin-bottom:2px;font-weight:500}
+.sv{font-size:15px;font-weight:700;font-family:var(--mn)}
+
+/* ─── Content ─── */
+.cnt{max-width:1280px;margin:0 auto;padding:14px 32px 40px}
+
+/* ─── Filters ─── */
+.flt{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.fb{padding:5px 12px;border-radius:3px;border:1px solid transparent;background:0;color:var(--t3);font-size:12px;font-weight:500;cursor:pointer;font-family:var(--sn);transition:color .12s,border-color .12s,background .12s}
+.fb:hover{color:var(--t1)}
+.fb.a{border-color:var(--bd2);background:var(--sf2);color:var(--t0);font-weight:600}
+.rb{margin-left:auto;padding:5px 10px;border-radius:3px;border:1px solid var(--bd);background:var(--sf);color:var(--t3);font-size:10px;font-weight:500;cursor:pointer;font-family:var(--mn);transition:.12s;letter-spacing:.02em}
+.rb:hover{background:var(--sf2);color:var(--t1);border-color:var(--bd2)}.rb:disabled{opacity:.3;cursor:not-allowed}
+.si{padding:5px 10px;border-radius:3px;border:1px solid var(--bd);background:var(--bg);color:var(--t0);font-size:12px;font-family:var(--sn);width:170px;outline:0;transition:border-color .12s}
+.si:focus{border-color:var(--bl)}.si::placeholder{color:var(--t4)}
+
+/* ─── Table ─── */
+.tw{border:1px solid var(--bd);overflow:hidden;background:var(--sf);border-radius:3px}
+.thr{display:grid;grid-template-columns:110px 1fr 90px 130px 86px 76px 76px;padding:9px 16px;border-bottom:2px solid var(--bd);background:var(--sf3);font-size:10.5px;font-weight:600;color:var(--t2);letter-spacing:.1em;text-transform:uppercase;font-family:var(--mn);align-items:center}
+.tr{display:grid;grid-template-columns:110px 1fr 90px 130px 86px 76px 76px;padding:10px 16px;border-bottom:1px solid var(--bd);align-items:center;transition:background .08s}
+.tr:last-child{border-bottom:0}
+.tr:hover{background:var(--sf2)}
+.tr.imm{background:rgba(193,154,62,.04);border-left:2px solid var(--yw);padding-left:14px}
+
+/* ─── Cell typography ─── */
+.tk{font-family:var(--mn);font-size:13px;font-weight:600;color:var(--t0);letter-spacing:.02em}
+.ex{font-size:9.5px;color:var(--t4);font-family:var(--mn);margin-left:4px;font-weight:400}
+.cn{font-size:12px;color:var(--t1);font-weight:400}
+.cs{font-size:10px;color:var(--t4);margin-top:1px}
+.qt{font-family:var(--mn);font-size:11px;color:var(--t2);font-weight:500}
+.dm{font-size:12px;color:var(--t1);font-weight:500}
+.ds{font-size:10px;font-family:var(--mn);margin-top:1px;font-weight:400}
+
+/* ─── Source tags ─── */
+.src{display:inline-block;padding:1px 4px;border-radius:2px;font-size:8px;font-weight:600;font-family:var(--mn);letter-spacing:.08em;margin-left:4px;vertical-align:middle}
+.sc{background:rgba(109,150,184,.08);color:var(--cy);border:1px solid rgba(109,150,184,.18)}
+.sf{background:rgba(138,155,176,.08);color:var(--pp);border:1px solid rgba(138,155,176,.18)}
+.sm{background:rgba(193,154,62,.06);color:var(--yw);border:1px solid rgba(193,154,62,.14)}
+
+/* ─── Status badges ─── */
+.bdg{display:inline-block;padding:2px 6px;border-radius:2px;font-size:10px;font-weight:600;white-space:nowrap;letter-spacing:.03em;font-family:var(--mn)}
+.br{background:var(--gnb);color:var(--gn);border:1px solid var(--gnd)}
+.bo{background:var(--rdb);color:var(--rd);border:1px solid var(--rdd)}
+.bi{background:var(--ywb);color:var(--yw);border:1px solid var(--ywd)}
+.bu{background:var(--blb);color:var(--bl);border:1px solid var(--bld)}
+.bf{background:var(--sf2);color:var(--t4);border:1px solid var(--bd)}
+
+/* ─── Checkboxes ─── */
+.cb{width:22px;height:22px;border-radius:2px;border:1.5px solid var(--bd2);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.1s;margin:0 auto}
+.cb:hover{border-color:var(--t3)}
+.cg{border-color:var(--gn)!important;background:rgba(61,139,94,.1)!important}
+.cp{border-color:var(--pp)!important;background:rgba(138,155,176,.08)!important}
+.cb:disabled{opacity:.4;cursor:default}
+
+/* ─── Legend ─── */
+.lg{margin-top:14px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10px;color:var(--t3);font-family:var(--mn)}
+.ld{width:6px;height:6px;border-radius:50%;display:inline-block}
+.li{display:flex;align-items:center;gap:4px}
+
+/* ─── Company cards ─── */
+.cds{margin-top:24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:8px}
+.cd{background:var(--sf);border:1px solid var(--bd);border-radius:3px;padding:12px 14px}
+.cdh{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.cdt{font-family:var(--mn);font-size:13px;font-weight:700;color:var(--t0)}
+.cdp{font-size:10px;font-family:var(--mn);color:var(--t4);font-weight:500}
+.cdp.dn{color:var(--gn)}
+.pb{height:2px;background:var(--bd);border-radius:1px;overflow:hidden;margin-bottom:7px}
+.pf{height:100%;border-radius:1px;transition:width .3s}
+.cdd{font-size:10px;color:var(--t3);line-height:1.55;font-family:var(--mn)}
+.cdn{color:var(--t2);margin-top:2px}
+
+/* ─── Banners ─── */
+.ban{background:var(--sf);border-radius:3px;padding:10px 14px;margin-bottom:10px;font-size:11px;color:var(--t2);line-height:1.5}
+.ban h3{font-size:11px;margin-bottom:2px;font-weight:600;font-family:var(--mn)}
+.bw{border:1px solid var(--ywd)}.bw h3{color:var(--yw)}
+.bb{border:1px solid var(--bld)}.bb h3{color:var(--bl)}
+
+/* ─── Misc ─── */
+.emp{padding:36px;text-align:center;color:var(--t4);font-size:12px;font-family:var(--mn)}
+a{color:var(--bl);text-decoration:none}a:hover{text-decoration:underline}
+
+/* ─── Add Form (inline in settings) ─── */
+.add-form{border:1px solid var(--bd);border-radius:3px;padding:14px;background:var(--sf2);margin-bottom:18px}
+.add-form h3{font-size:12px;font-weight:600;color:var(--t1);margin-bottom:10px;font-family:var(--mn);letter-spacing:.06em}
+.add-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.add-fg{display:flex;flex-direction:column;gap:3px}
+.add-fg label{font-size:9px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--mn)}
+.add-fg input,.add-fg select{padding:6px 10px;border-radius:3px;border:1px solid var(--bd);background:var(--bg);color:var(--t0);font-size:12px;font-family:var(--sn);outline:0;transition:border-color .12s}
+.add-fg input:focus,.add-fg select:focus{border-color:var(--bl)}
+.add-fg select{cursor:pointer;-webkit-appearance:none;appearance:none;padding-right:24px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23768390'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.add-fg input::placeholder{color:var(--t4)}
+.add-btn{padding:6px 16px;border-radius:3px;border:1px solid var(--bd2);background:var(--sf3);color:var(--t0);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--mn);transition:.12s;white-space:nowrap;align-self:flex-end}
+.add-btn:hover{background:var(--bd);border-color:var(--t4)}
+.add-btn:disabled{opacity:.35;cursor:not-allowed}
+.add-st{font-size:10px;font-family:var(--mn);color:var(--t3);margin-top:6px;min-height:14px}
+.add-st.ok{color:var(--gn)}.add-st.err{color:var(--rd)}
+/* ─── Tab Navigation ─── */
+.tab-nav{display:flex;gap:0;margin-top:8px}
+.tab-btn{padding:5px 14px;border:0;background:0;color:var(--t4);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--mn);letter-spacing:.06em;border-bottom:2px solid transparent;transition:.12s}
+.tab-btn:hover{color:var(--t2)}
+.tab-btn.act{color:var(--t0);border-bottom-color:var(--bl)}
+.tab-panel{display:none}.tab-panel.act{display:block}
+
+/* ─── Settings Panel ─── */
+.cfg-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.cfg-hdr h2{font-size:15px;font-weight:700;color:var(--t0)}
+.cfg-count{font-family:var(--mn);font-size:11px;color:var(--t3)}
+.cfg-add{display:flex;gap:6px;align-items:center;margin-bottom:16px}
+.cfg-add input{padding:6px 10px;border-radius:3px;border:1px solid var(--bd);background:var(--bg);color:var(--t0);font-size:12px;font-family:var(--mn);width:160px;outline:0;text-transform:uppercase}
+.cfg-add input:focus{border-color:var(--bl)}
+.cfg-add input::placeholder{color:var(--t4);text-transform:none}
+.cfg-add-btn{padding:6px 14px;border-radius:3px;border:1px solid var(--bd2);background:var(--sf3);color:var(--t0);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--mn);transition:.12s}
+.cfg-add-btn:hover{background:var(--bd);border-color:var(--t4)}
+.cfg-add-btn:disabled{opacity:.35;cursor:not-allowed}
+.cfg-st{font-size:10px;font-family:var(--mn);color:var(--t3);margin-left:6px;min-width:0}
+.cfg-st.ok{color:var(--gn)}.cfg-st.err{color:var(--rd)}
+.cfg-tbl{border:1px solid var(--bd);border-radius:3px;overflow:hidden;background:var(--sf)}
+.cfg-th{display:grid;grid-template-columns:100px 1fr 130px 90px 70px;padding:8px 14px;border-bottom:2px solid var(--bd);background:var(--sf3);font-size:10px;font-weight:600;color:var(--t2);letter-spacing:.1em;text-transform:uppercase;font-family:var(--mn);align-items:center}
+.cfg-tr{display:grid;grid-template-columns:100px 1fr 130px 90px 70px;padding:8px 14px;border-bottom:1px solid var(--bd);align-items:center;font-size:12px;transition:background .08s}
+.cfg-tr:last-child{border-bottom:0}
+.cfg-tr:hover{background:var(--sf2)}
+.cfg-tr .tk{font-size:12px}
+.cfg-tr .cn{font-size:11px}
+.cfg-tr .cs{font-size:9.5px}
+.cfg-type{font-family:var(--mn);font-size:9px;padding:2px 5px;border-radius:2px;letter-spacing:.06em;font-weight:600}
+.cfg-type.cl{background:rgba(109,150,184,.08);color:var(--cy);border:1px solid rgba(109,150,184,.18)}
+.cfg-type.intl{background:rgba(138,155,176,.08);color:var(--pp);border:1px solid rgba(138,155,176,.18)}
+.cfg-type.cst{background:rgba(193,154,62,.06);color:var(--yw);border:1px solid rgba(193,154,62,.14)}
+.cfg-del{padding:3px 8px;border:1px solid var(--bd);border-radius:2px;background:var(--bg);color:var(--t4);font-size:9px;font-family:var(--mn);cursor:pointer;transition:.1s;font-weight:500}
+.cfg-del:hover{border-color:var(--rd);color:var(--rd);background:var(--rdb)}
+.cfg-search{padding:6px 10px;border-radius:3px;border:1px solid var(--bd);background:var(--bg);color:var(--t0);font-size:12px;font-family:var(--sn);width:170px;outline:0;margin-left:auto}
+.cfg-search:focus{border-color:var(--bl)}.cfg-search::placeholder{color:var(--t4)}
+
+/* ─── Responsive ─── */
+@media(max-width:900px){
+  .thr,.tr{grid-template-columns:78px 1fr 65px 95px 62px 56px 56px;font-size:9px;padding:8px 8px}
+  .hi{flex-direction:column;align-items:flex-start}
+  .cnt{padding:10px 12px 32px}.hdr{padding:14px 12px}
+  .si{width:110px}.cds{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  .tk{font-size:11px}.cn{font-size:11px}.bdg{font-size:9px}
+  .cfg-th,.cfg-tr{grid-template-columns:70px 1fr 90px 50px 60px;font-size:9px;padding:6px 8px}
+  .cfg-add{flex-wrap:wrap}.cfg-add input{width:120px}.cfg-search{width:120px;margin-left:0}
+}
+</style>
+</head>
+<body>
+<div class="hdr"><div class="hi">
+<div>
+  <div class="brand">Inversiones Adriana</div>
+  <h1>Earnings Calendar</h1>
+  <p class="sub">Seguimiento de reportes trimestrales — Portafolio iA</p>
+  <div class="conn"><span class="dot" id="cD" style="background:var(--t3)"></span><span id="cT">Iniciando...</span></div>
+  <div class="ar" id="aR"></div>
+  <div class="tab-nav">
+    <button class="tab-btn act" onclick="switchTab('cal')">Calendar</button>
+    <button class="tab-btn" onclick="switchTab('cfg')">Configuración</button>
+  </div>
+</div>
+<div class="sts" id="sA"></div>
+</div></div>
+<div class="cnt">
+<div class="tab-panel act" id="tabCal">
+<div id="bns"></div>
+<div class="flt" id="flt"></div>
+<div class="tw" id="tW"></div>
+<div class="lg" id="lg"></div>
+<div class="cds" id="cds"></div>
+</div>
+<div class="tab-panel" id="tabCfg">
+<div id="cfgPanel"></div>
+</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+// =======================================================================
+//  CONFIG
+// =======================================================================
+const FB={apiKey:"AIzaSyCaveZCUCjaC35VMWSdAX_EgsB-605s5Zo",authDomain:"earnings-calendar-42f02.firebaseapp.com",databaseURL:"https://earnings-calendar-42f02-default-rtdb.firebaseio.com",projectId:"earnings-calendar-42f02",storageBucket:"earnings-calendar-42f02.firebasestorage.app",messagingSenderId:"316391357154",appId:"1:316391357154:web:17fd7cb46b0e2bd32b3cbb"};
+
+// EmailJS config — set these after creating your EmailJS account
+let EJ={serviceId:"",templateId:"",publicKey:""};
+let ALERT_EMAILS=["juanpablo@iadriana.cl","jmunoz@iadriana.cl"];
+
+// =======================================================================
+//  PORTFOLIO  (cmfRut/cmfName → scrapeado de CMF, yf → Yahoo Finance)
+// =======================================================================
+const P=[
+// CHILENAS
+{t:"CENCOSUD",n:"Cencosud S.A.",s:"Retail",x:"BCS",cmfRut:"93834000-0",cmfName:"CENCOSUD",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"ENTEL",n:"Entel S.A.",s:"Telecom",x:"BCS",cmfRut:"92580000-7",cmfName:"EMPRESA NACIONAL DE TELECOMUNICACIONES",q:[{q:"Q1 26",d:"2026-05-04"},{q:"Q2 26",d:"2026-08-03"},{q:"Q3 26",d:"2026-11-02"},{q:"FY 26",d:"2027-01-27"}]},
+{t:"SONDA",n:"Sonda S.A.",s:"IT Services",x:"BCS",cmfRut:"83628100-4",cmfName:"SONDA",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"MANQUEHUE",n:"Inmob. Manquehue",s:"Real Estate",x:"BCS",cmfName:"MANQUEHUE",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"ILC",n:"Inv. La Construcción",s:"Holding",x:"BCS",cmfName:"INVERSIONES LA CONSTRUCCION",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"ANDINA-A",n:"Embotelladora Andina",s:"Bebidas",x:"BCS",cmfName:"EMBOTELLADORA ANDINA",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"ITAUCORP",n:"Banco Itaú Chile",s:"Banca",x:"BCS",cmfName:"ITAU",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"ECL",n:"Engie Energía Chile",s:"Energía",x:"BCS",cmfRut:"88006900-4",cmfName:"ENGIE ENERGIA CHILE",q:[{q:"Q1 26",d:"2026-04-29"},{q:"Q2 26",d:"2026-07-29"},{q:"Q3 26",d:"2026-10-28"},{q:"FY 26",d:"2027-01-27"}]},
+{t:"MULTIX",n:"Multiexport Foods",s:"Salmón",x:"BCS",cmfName:"MULTIEXPORT",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"IAM",n:"IAM S.A.",s:"Agua",x:"BCS",cmfName:"IAM",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"CONCHATORO",n:"Viña Concha y Toro",s:"Vinos",x:"BCS",cmfName:"CONCHA Y TORO",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"VAPORES",n:"CSAV / Vapores",s:"Naviero",x:"BCS",cmfRut:"90160000-7",cmfName:"SUD AMERICANA DE VAPORES",q:[{q:"Q1 26",d:"2026-05-25"},{q:"Q2 26",d:"2026-08-28"},{q:"Q3 26",d:"2026-11-20"},{q:"FY 26",d:""}]},
+{t:"BCI",n:"Banco BCI",s:"Banca",x:"BCS",cmfRut:"97006000-6",cmfName:"BANCO DE CREDITO E INVERSIONES",q:[{q:"Q1 26",d:"2026-04-30"},{q:"Q2 26",d:"2026-07-31"},{q:"Q3 26",d:"2026-10-30"},{q:"FY 26",d:"2027-02-26"}]},
+{t:"SQM-B",n:"SQM S.A.",s:"Litio / Químicos",x:"BCS/NYSE",cmfRut:"93007000-9",cmfName:"SOCIEDAD QUIMICA Y MINERA",q:[{q:"Q1 26",d:"2026-05-26"},{q:"Q2 26",d:"2026-08-18"},{q:"Q3 26",d:"2026-11-17"},{q:"FY 26",d:""}]},
+{t:"ANTARCHILE",n:"Antarchile S.A.",s:"Holding",x:"BCS",cmfName:"ANTARCHILE",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"NUTRAVALOR",n:"Inv. Nutravalor",s:"Holding",x:"BCS",cmfName:"NUTRAVALOR",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"SIEMEL",n:"Siemel S.A.",s:"Financiero",x:"BCS",cmfName:"SIEMEL",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"VENTANAS",n:"Puerto Ventanas",s:"Puertos",x:"BCS",cmfName:"PUERTO VENTANAS",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"DUNCANFOX",n:"Duncan Fox S.A.",s:"Holding",x:"BCS",cmfName:"DUNCAN FOX",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"CCU",n:"Cervecerías Unidas",s:"Bebidas",x:"BCS/NYSE",cmfName:"CERVECERIAS UNIDAS",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+// INTERNACIONALES
+{t:"CERT",n:"Certara Inc.",s:"Healthcare",x:"NASDAQ",yf:"CERT",q:[{q:"Q1 26",d:"2026-05-11"},{q:"Q2 26",d:"2026-08-06"},{q:"Q3 26",d:"2026-11-05"}]},/*Q1 confirmed IR 2026-04-09*/
+{t:"GLOB",n:"Globant S.A.",s:"IT Services",x:"NYSE",yf:"GLOB",q:[{q:"Q1 26",d:"2026-05-14"},{q:"Q2 26",d:"2026-08-13"},{q:"Q3 26",d:"2026-11-12"}]},/*Q1 confirmed multiple sources*/
+{t:"DLO",n:"DLocal Limited",s:"Fintech",x:"NASDAQ",yf:"DLO",q:[{q:"Q1 26",d:"2026-05-14"},{q:"Q2 26",d:"2026-08-13"},{q:"Q3 26",d:"2026-11-12"}]},/*Q1 confirmed IR 2026-03-31*/
+{t:"GPRO",n:"GoPro Inc.",s:"Consumer Elec.",x:"NASDAQ",yf:"GPRO",q:[{q:"Q1 26",d:"2026-04-30"},{q:"Q2 26",d:"2026-08-06"},{q:"Q3 26",d:"2026-11-05"}]},
+{t:"WPP",n:"WPP plc",s:"Media / Advert.",x:"NYSE/LSE",yf:"WPP",q:[{q:"Q1 26",d:"2026-04-28"},{q:"H1 26",d:"2026-07-31"},{q:"Q3 26",d:"2026-10-22"}]},/*Q1 confirmed 6-K 2026-04-09*/
+{t:"PYPL",n:"PayPal Holdings",s:"Fintech",x:"NASDAQ",yf:"PYPL",q:[{q:"Q1 26",d:"2026-05-05"},{q:"Q2 26",d:"2026-07-30"},{q:"Q3 26",d:"2026-10-29"}]},/*Q1 confirmed WSH*/
+{t:"BABA",n:"Alibaba (ADR)",s:"E-commerce",x:"NYSE",yf:"BABA",q:[{q:"Q4 FY26",d:"2026-05-14"},{q:"Q1 FY27",d:"2026-08-13"},{q:"Q2 FY27",d:"2026-11-12"}]},/*Q4FY26 confirmed TipRanks*/
+{t:"UBER",n:"Uber Technologies",s:"Mobility",x:"NYSE",yf:"UBER",q:[{q:"Q1 26",d:"2026-05-06"},{q:"Q2 26",d:"2026-08-06"},{q:"Q3 26",d:"2026-11-05"}]},
+{t:"CRM",n:"Salesforce Inc.",s:"Cloud / SaaS",x:"NYSE",yf:"CRM",q:[{q:"Q1 FY27",d:"2026-06-03"},{q:"Q2 FY27",d:"2026-08-27"},{q:"Q3 FY27",d:"2026-12-03"}]},/*Q1FY27 confirmed TipRanks*/
+{t:"STNE",n:"StoneCo Ltd.",s:"Fintech Brasil",x:"NASDAQ",yf:"STNE",q:[{q:"Q1 26",d:"2026-05-14"},{q:"Q2 26",d:"2026-08-13"},{q:"Q3 26",d:"2026-11-12"}]},/*Q1 confirmed IR 2026-04-02*/
+{t:"UNH",n:"UnitedHealth Group",s:"Healthcare",x:"NYSE",yf:"UNH",q:[{q:"Q1 26",d:"2026-04-21"},{q:"Q2 26",d:"2026-07-16"},{q:"Q3 26",d:"2026-10-15"}]},/*Q1 confirmed IR 2026-03-17*/
+{t:"KKR",n:"KKR & Co Inc.",s:"Private Equity",x:"NYSE",yf:"KKR",q:[{q:"Q1 26",d:"2026-05-05"},{q:"Q2 26",d:"2026-08-04"},{q:"Q3 26",d:"2026-11-03"}]},/*Q1 confirmed BW 2026-04-02*/
+{t:"FI",n:"Fiserv Inc.",s:"Fintech",x:"NYSE",yf:"FI",q:[{q:"Q1 26",d:"2026-04-30"},{q:"Q2 26",d:"2026-07-30"},{q:"Q3 26",d:"2026-10-29"}]},/*Q1 est. ~Apr28-30*/
+{t:"FNMA",n:"Fannie Mae",s:"GSE",x:"OTC",yf:"FNMA",q:[{q:"Q1 26",d:"2026-05-08"},{q:"Q2 26",d:"2026-08-07"},{q:"Q3 26",d:"2026-11-06"}]},/*Q1 est. based on hist.*/
+{t:"AVAL",n:"Grupo Aval",s:"Banca Colombia",x:"NYSE",yf:"AVAL",q:[{q:"Q1 26",d:"2026-05-20"},{q:"Q2 26",d:"2026-08-20"},{q:"Q3 26",d:"2026-11-19"}]},/*Q1 est. Investing.com*/
+{t:"XP",n:"XP Inc.",s:"Brokerage Brasil",x:"NASDAQ",yf:"XP",q:[{q:"Q1 26",d:"2026-05-19"},{q:"Q2 26",d:"2026-08-18"},{q:"Q3 26",d:"2026-11-17"}]},/*Q1 est. ~May 19*/
+{t:"WOOF",n:"Petco Health",s:"Retail Mascotas",x:"NASDAQ",yf:"WOOF",q:[{q:"Q1 FY27",d:"2026-05-27"},{q:"Q2 FY27",d:"2026-09-03"},{q:"Q3 FY27",d:"2026-12-03"}]},/*Q1FY27 confirmed TipRanks*/
+{t:"NEXI",n:"Nexi SpA",s:"Payments Italia",x:"MI",q:[{q:"H1 26",d:"2026-07-30"},{q:"9M 26",d:"2026-11-05"}]},
+{t:"TAL",n:"TAL Education",s:"Educación China",x:"NYSE",yf:"TAL",q:[{q:"Q4 FY26",d:"2026-04-23"},{q:"Q1 FY27",d:"2026-07-23"},{q:"Q2 FY27",d:"2026-10-22"}]},/*Q4FY26 confirmed IR 2026-04-09*/
+{t:"SSW",n:"Sibanye Stillwater",s:"Minería PGMs",x:"JSE/NYSE",yf:"SBSW",q:[{q:"H1 26",d:"2026-09-01"}]},/*H1 confirmed TipRanks*/
+{t:"U",n:"Unity Software",s:"Gaming / 3D",x:"NYSE",yf:"U",q:[{q:"Q1 26",d:"2026-05-07"},{q:"Q2 26",d:"2026-08-06"},{q:"Q3 26",d:"2026-11-05"}]},/*Q1 confirmed BW 2026-04-09*/
+{t:"SNN",n:"Smith & Nephew",s:"Med Devices",x:"NYSE/LSE",yf:"SNN",q:[{q:"H1 26",d:"2026-07-30"},{q:"Q3 26",d:"2026-11-05"}]},
+{t:"DVI",n:"Banco Davivienda",s:"Banca Colombia",x:"BVC",q:[{q:"Q1 26",d:"2026-05-21"},{q:"Q2 26",d:"2026-08-20"},{q:"Q3 26",d:"2026-11-19"}]},
+{t:"CMCO",n:"Columbus McKinnon",s:"Industrials",x:"NASDAQ",yf:"CMCO",q:[{q:"Q4 FY26",d:"2026-05-28"},{q:"Q1 FY27",d:"2026-08-06"},{q:"Q2 FY27",d:"2026-11-05"}]},
+{t:"AVTR",n:"Avantor Inc.",s:"Life Sciences",x:"NYSE",yf:"AVTR",q:[{q:"Q1 26",d:"2026-04-29"},{q:"Q2 26",d:"2026-07-30"},{q:"Q3 26",d:"2026-10-29"}]},/*Q1 confirmed IR 2026-04-03*/
+{t:"TV",n:"TelevisaUnivision",s:"Media México",x:"NYSE",yf:"TV",q:[{q:"Q1 26",d:"2026-05-15"},{q:"Q2 26",d:"2026-08-14"},{q:"Q3 26",d:"2026-11-13"}]},/*Q1 est. no source*/
+{t:"HSIC",n:"Henry Schein",s:"Healthcare Dist",x:"NASDAQ",yf:"HSIC",q:[{q:"Q1 26",d:"2026-05-06"},{q:"Q2 26",d:"2026-08-05"},{q:"Q3 26",d:"2026-11-04"}]},/*Q1 est. based on hist.*/
+{t:"BUR",n:"Burford Capital",s:"Litigation Fin.",x:"NYSE",yf:"BUR",q:[{q:"H1 26",d:"2026-08-06"}]},
+{t:"MBRFY",n:"Marfrig Foods",s:"Cárnica Brasil",x:"OTC/B3",q:[{q:"Q1 26",d:"2026-05-14"},{q:"Q2 26",d:"2026-08-13"},{q:"Q3 26",d:"2026-11-12"}]},
+{t:"GPRK",n:"GeoPark Ltd.",s:"Oil&Gas LatAm",x:"NYSE",yf:"GPRK",q:[{q:"Q1 26",d:"2026-05-07"},{q:"Q2 26",d:"2026-08-06"},{q:"Q3 26",d:"2026-11-05"}]},
+{t:"HAPV3",n:"Hapvida",s:"Healthcare Brasil",x:"B3",q:[{q:"Q1 26",d:"2026-05-14"},{q:"Q2 26",d:"2026-08-13"},{q:"Q3 26",d:"2026-11-12"}]},
+{t:"TWE",n:"Treasury Wine Estates",s:"Vinos Australia",x:"ASX",q:[{q:"FY 26",d:"2026-08-13"}]},
+{t:"CS",n:"Capstone Copper",s:"Minería Cobre",x:"TSX",q:[{q:"Q1 26",d:"2026-05-07"},{q:"Q2 26",d:"2026-08-06"},{q:"Q3 26",d:"2026-11-05"}]},
+{t:"AXTA",n:"Axalta Coating",s:"Químicos",x:"NYSE",yf:"AXTA",q:[{q:"Q1 26",d:"2026-04-30"},{q:"Q2 26",d:"2026-07-30"},{q:"Q3 26",d:"2026-10-29"}]},/*Q1 confirmed IR 2026-04-06*/
+{t:"AKZO",n:"Akzo Nobel N.V.",s:"Químicos",x:"Euronext",q:[{q:"Q1 26",d:"2026-04-29"},{q:"Q2 26",d:"2026-07-22"},{q:"Q3 26",d:"2026-10-21"}]},
+{t:"NCNO",n:"nCino Inc.",s:"Cloud Banking",x:"NASDAQ",yf:"NCNO",q:[{q:"Q1 FY27",d:"2026-06-03"},{q:"Q2 FY27",d:"2026-09-01"},{q:"Q3 FY27",d:"2026-12-01"}]},/*Q4FY26 ya reportado 31mar; Q1FY27 est.*/
+{t:"REP",n:"Repsol S.A.",s:"Oil&Gas España",x:"BME",q:[{q:"Q1 26",d:"2026-05-07"},{q:"Q2 26",d:"2026-07-23"},{q:"Q3 26",d:"2026-10-29"}]},
+{t:"ALPEK",n:"Alpek SAB",s:"Petroquímicos MX",x:"BMV",q:[{q:"Q1 26",d:"2026-04-23"},{q:"Q2 26",d:"2026-07-23"},{q:"Q3 26",d:"2026-10-22"}]},
+{t:"TSORF",n:"Tesoro Gold",s:"Minería Gold",x:"ASX/OTC",q:[{q:"FY 26",d:"2026-09-17"}]},
+{t:"PPTF",n:"Perpetual Ltd.",s:"Asset Mgmt AU",x:"ASX/OTC",q:[{q:"FY 26",d:"2026-08-20"}]},
+];
+
+// =======================================================================
+//  STATE
+// =======================================================================
+let ck={},cf="all",sq="",db=null,dr=null,uf=false,cmfS="idle",yhS="idle",hiddenTickers=[];
+const MO=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+const fd=d=>{if(!d)return"—";const v=new Date(d+"T12:00:00");return v.getDate()+" "+MO[v.getMonth()]+" "+v.getFullYear()};
+const dt=d=>{if(!d)return 999;const t=new Date;t.setHours(0,0,0,0);return Math.ceil((new Date(d+"T00:00:00")-t)/864e5)};
+const gs=(d,r)=>{const v=dt(d);if(r)return"reported";if(!d)return"future";if(v<0)return"overdue";if(v<=7)return"imminent";if(v<=30)return"upcoming";return"future"};
+const SC={reported:{l:"Reportado",b:"br",c:"var(--gn)"},overdue:{l:"Atrasado",b:"bo",c:"var(--rd)"},imminent:{l:"Inminente",b:"bi",c:"var(--yw)"},upcoming:{l:"Próximo",b:"bu",c:"var(--bl)"},future:{l:"Futuro",b:"bf",c:"var(--t3)"}};
+const ic=(t,q,f)=>(ck[t+"_"+q]||{})[f]||false;
+function tc(t,q,f){const k=t+"_"+q;if(!ck[k])ck[k]={};ck[k][f]=!ck[k][f];sv();rn()}
+function sv(){if(uf&&dr)dr.child("checks").set(ck);else localStorage.setItem("ia-e",JSON.stringify(ck))}
+
+// =======================================================================
+//  CMF SCRAPER (multiple proxy fallbacks)
+// =======================================================================
+async function fCMF(){
+  cmfS="loading";rAS();
+  const cmfUrl="https://www.cmfchile.cl/institucional/mercados/novedades_envio_fechas_eeff.php";
+  let h=null;
+  // Strategy 1: allorigins /get (returns JSON with contents field — more reliable)
+  try{
+    const r=await fetch("https://api.allorigins.win/get?url="+encodeURIComponent(cmfUrl),{signal:AbortSignal.timeout(10000)});
+    if(r.ok){const j=await r.json();if(j.contents)h=j.contents}
+  }catch(e){console.warn("allorigins/get failed:",e)}
+  // Strategy 2: corsproxy.io (direct)
+  if(!h)try{
+    const r=await fetch("https://corsproxy.io/?"+encodeURIComponent(cmfUrl),{signal:AbortSignal.timeout(10000)});
+    if(r.ok)h=await r.text();
+  }catch(e){console.warn("corsproxy failed:",e)}
+  // Strategy 3: codetabs
+  if(!h)try{
+    const r=await fetch("https://api.codetabs.com/v1/proxy?quest="+encodeURIComponent(cmfUrl),{signal:AbortSignal.timeout(10000)});
+    if(r.ok)h=await r.text();
+  }catch(e){console.warn("codetabs failed:",e)}
+  if(!h){cmfS="error";rAS();rn();return}
+  try{
+    const doc=new DOMParser().parseFromString(h,"text/html");
+    const rows=doc.querySelectorAll("table tr");
+    const cd={};
+    rows.forEach(row=>{const c=row.querySelectorAll("td");if(c.length>=6){
+      const nm=c[0].textContent.trim().toUpperCase(),rut=c[1].textContent.trim();
+      cd[rut]={nm,q1:c[2].textContent.trim(),q2:c[3].textContent.trim(),q3:c[4].textContent.trim(),fy:c[5].textContent.trim()};
+    }});
+    const pd=s=>{if(!s||s==="-")return"";const p=s.split("/");return p.length===3?p[2]+"-"+p[1].padStart(2,"0")+"-"+p[0].padStart(2,"0"):""};
+    let m=0;
+    P.forEach(co=>{
+      if(!co.cmfRut&&!co.cmfName)return;
+      let e=co.cmfRut?cd[co.cmfRut]:null;
+      if(!e&&co.cmfName){const up=co.cmfName.toUpperCase();for(const[,v]of Object.entries(cd)){if(v.nm.includes(up)||up.includes(v.nm)){e=v;break}}}
+      if(e){m++;const ds=[pd(e.q1),pd(e.q2),pd(e.q3),pd(e.fy)];
+        co.q.forEach((q,i)=>{if(ds[i]){q.d=ds[i];q.cf=true;q._s="cmf"}});}
+    });
+    cmfS="ok";
+    if(uf&&dr)dr.child("cache/cmf").set({ts:Date.now(),data:cd});
+  }catch(e){console.warn("CMF parse:",e);cmfS="error"}
+  rAS();rn();
+}
+
+// =======================================================================
+//  INTL: fechas hardcodeadas, verificadas manualmente
+//  Para actualizar: pide a Claude que verifique las fechas
+// =======================================================================
+async function fYH(){ yhS="ok"; rAS(); rn(); }
+
+// =======================================================================
+//  FIREBASE
+// =======================================================================
+function iF(){
+  if(!FB.apiKey||!FB.databaseURL){sC("local");lL();loadCustomTickers();rn();return}
+  try{firebase.initializeApp(FB);db=firebase.database();dr=db.ref("earnings-tracker");uf=true;sC("connecting");
+    dr.child("checks").on("value",s=>{ck=s.val()||{};sC("ok");rn()});
+    dr.child("custom-tickers").on("value",s=>{const arr=s.val()||[];arr.forEach(c=>{if(c&&!P.find(p=>p.t===c.t)){c._custom=true;P.push(c)}});rn()});
+    dr.child("hidden-tickers").on("value",s=>{hiddenTickers=s.val()||[];rn()});
+    dr.child("emailjs-config").on("value",s=>{const c=s.val();if(c){EJ.serviceId=c.serviceId||"";EJ.templateId=c.templateId||"";EJ.publicKey=c.publicKey||"";if(c.emails&&c.emails.length)ALERT_EMAILS=c.emails}});
+  }catch(e){sC("local");lL();loadCustomTickers();rn()}}
+function sC(s){const d=document.getElementById("cD"),t=document.getElementById("cT");
+  if(s==="ok"){d.style.background="var(--gn)";t.textContent="Firebase conectado";t.style.color="var(--gn)"}
+  else if(s==="connecting"){d.style.background="var(--yw)";t.textContent="Conectando...";t.style.color="var(--yw)"}
+  else{d.style.background="var(--t3)";t.textContent="Modo local";t.style.color="var(--t3)"}}
+function lL(){try{const r=localStorage.getItem("ia-e");if(r)ck=JSON.parse(r)}catch(e){}}
+
+// =======================================================================
+//  RENDER
+// =======================================================================
+function rAS(){const r=document.getElementById("aR");
+  const cl=cmfS==="ok"?"✓ CMF (chilenas)":cmfS==="loading"?"⟳ CMF...":cmfS==="error"?"✗ CMF":"· CMF";
+  const cc=cmfS==="ok"?"var(--cy)":cmfS==="error"?"var(--rd)":"var(--t4)";
+  r.innerHTML=`<span style="color:${cc}">${cl}</span><span style="color:var(--t4)">· Intl: fechas verificadas</span>`}
+
+function bE(){
+  return P.filter(co=>!hiddenTickers.includes(co.t)).flatMap(co=>co.q.map(qr=>{
+    const rp=qr.rep||ic(co.t,qr.q,"reported");
+    return{t:co.t,n:co.n,s:co.s,x:co.x,q:qr.q,d:qr.d,cf:qr.cf,rep:rp,st:gs(qr.d,rp),dy:dt(qr.d),src:qr._s||"manual",_c:co._custom||false};
+  })).sort((a,b)=>{if(!a.d&&!b.d)return 0;if(!a.d)return 1;if(!b.d)return-1;return new Date(a.d)-new Date(b.d)})}
+
+function rn(){try{
+  const all=bE();const sQ=sq.toLowerCase();
+  const dated=all.filter(e=>e.d);
+  let f=all;
+  if(cf==="pending")f=f.filter(e=>!e.rep&&e.d);
+  if(cf==="done")f=f.filter(e=>e.rep);
+  if(sQ)f=f.filter(e=>e.t.toLowerCase().includes(sQ)||e.n.toLowerCase().includes(sQ)||e.s.toLowerCase().includes(sQ));
+  const rc=dated.filter(e=>e.rep).length,mc=dated.filter(e=>ic(e.t,e.q,"model")).length;
+  const nx=dated.find(e=>!e.rep&&e.d);
+
+  document.getElementById("sA").innerHTML=`<div class="sb"><div class="sl">Reportados</div><div class="sv" style="color:var(--gn)">${rc}/${dated.length}</div></div>
+    <div class="sb"><div class="sl">Modelos</div><div class="sv" style="color:var(--pp)">${mc}/${dated.length}</div></div>
+    ${nx?`<div class="sb"><div class="sl">Próximo</div><div class="sv" style="color:var(--yw)">${nx.t} · ${nx.dy>0?nx.dy+'d':'Hoy'}</div></div>`:''}`;
+
+  let bH="";
+  const nd=P.flatMap(c=>c.q).filter(q=>!q.d).length;
+  if(nd>0)bH+=`<div class="ban bb"><h3>${nd} fechas pendientes de la CMF</h3>Algunas empresas chilenas aún no publican fechas. Se actualizarán automáticamente cuando la CMF las suba.</div>`;
+  document.getElementById("bns").innerHTML=bH;
+
+  document.getElementById("flt").innerHTML=["all","pending","done"].map(v=>{
+    const l={all:"Todos",pending:"Pendientes",done:"Reportados"};
+    return`<button class="fb ${cf===v?'a':''}" onclick="sF('${v}')">${l[v]}</button>`}).join("")+
+    `<input class="si" placeholder="Buscar ticker..." value="${sq}" oninput="sS(this.value)">`+
+    `<button class="rb" id="rfb" onclick="rA()">↻ Actualizar</button>`;
+
+  let rw=`<div class="thr"><span>Ticker</span><span>Empresa</span><span>Quarter</span><span>Fecha</span><span>Estado</span><span style="text-align:center">Reportado</span><span style="text-align:center">Modelo</span></div>`;
+  if(!f.length)rw+=`<div class="emp">No hay eventos.</div>`;
+  else f.forEach(e=>{
+    const c=SC[e.st];
+    const noDate=!e.d;
+    const dl=noDate?"Pendiente":e.rep?"":(e.dy>0?`en ${e.dy}d`:e.dy===0?"Hoy":`hace ${Math.abs(e.dy)}d`);
+    const dc=noDate?"var(--t4)":e.dy<=0?"var(--rd)":e.dy<=7?"var(--yw)":"var(--t4)";
+    const sb=noDate?"":e.src==="cmf"?`<span class="src sc">CMF</span>`:e.src==="yahoo"?`<span class="src sf">VER</span>`:`<span class="src sm">EST</span>`;
+    const rk=e.rep,mk=ic(e.t,e.q,"model");
+    const ck1=rk?'<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7.5L5.5 10L11 4" stroke="var(--gn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>':'';
+    const ck2=mk?'<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7.5L5.5 10L11 4" stroke="var(--pp)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>':'';
+    rw+=`<div class="tr ${e.st==='imminent'?'imm':''}">
+      <div><span class="tk">${e.t}</span><span class="ex">${e.x}</span></div>
+      <div><div class="cn">${e.n}</div><div class="cs">${e.s}</div></div>
+      <span class="qt">${e.q}</span>
+      <div><div class="dm">${noDate?'<span style="color:var(--t4)">Sin fecha</span>':fd(e.d)}${sb}</div>${!e.rep&&dl?`<div class="ds" style="color:${dc}">${dl}</div>`:''}</div>
+      <span class="bdg ${c.b}">${c.l}</span>
+      <div style="text-align:center"><button class="cb ${rk?'cg':''}" onclick="tc('${e.t}','${e.q}','reported')">${ck1}</button></div>
+      <div style="text-align:center"><button class="cb ${mk?'cp':''}" onclick="tc('${e.t}','${e.q}','model')">${ck2}</button></div></div>`});
+  document.getElementById("tW").innerHTML=rw;
+
+  document.getElementById("lg").innerHTML=Object.entries(SC).map(([,v])=>`<div class="li"><span class="ld" style="background:${v.c}"></span>${v.l}</div>`).join("")+
+    `<div class="li"><span class="src sc">CMF</span>Oficial CMF</div><div class="li"><span class="src sf">VER</span>Verificada</div><div class="li"><span class="src sm">EST</span>Estimada</div>`;
+
+  document.getElementById("cds").innerHTML=P.filter(co=>!hiddenTickers.includes(co.t)).map(co=>{
+    const qs=co.q.filter(q=>q.d);const dn=qs.filter(q=>q.rep||ic(co.t,q.q,"reported")).length;
+    const md=qs.filter(q=>ic(co.t,q.q,"model")).length;const tl=qs.length||1;
+    const nx2=co.q.find(q=>q.d&&!q.rep&&!ic(co.t,q.q,"reported"));const pc=Math.round(dn/tl*100);
+    return`<div class="cd"><div class="cdh"><span class="cdt">${co.t}</span><span class="cdp ${pc===100?'dn':''}">${pc}%</span></div>
+      <div class="pb"><div class="pf" style="width:${pc}%;background:${pc===100?'var(--gn)':'#5a8ac0'}"></div></div>
+      <div class="cdd"><div>Reportados: ${dn}/${tl}</div><div>Modelos: ${md}/${tl}</div>${nx2?`<div class="cdn">Próximo: ${nx2.q} · ${fd(nx2.d)}</div>`:''}</div></div>`}).join("")
+}catch(e){console.error("Render error:",e)}}
+
+function sF(v){cf=v;rn()}
+function sS(v){sq=v;rn();const i=document.querySelector('.si');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}}
+async function rA(){const b=document.getElementById("rfb");b.disabled=true;b.textContent="↻ Actualizando...";await fCMF();await fYH();b.disabled=false;b.textContent="↻ Actualizar";rn()}
+
+// =======================================================================
+//  TABS & SETTINGS PANEL
+// =======================================================================
+let activeTab="cal",cfgQ="";
+function switchTab(id){
+  activeTab=id;
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("act",b.textContent.trim()===(id==="cal"?"Calendar":"Configuración")));
+  document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("act"));
+  document.getElementById(id==="cal"?"tabCal":"tabCfg").classList.add("act");
+  if(id==="cfg")renderCfg();
+}
+function cfgSearch(v){cfgQ=v.toLowerCase();renderCfg();const i=document.querySelector('.cfg-search');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}}
+
+function renderCfg(){
+  const panel=document.getElementById("cfgPanel");
+  const allTickers=P.filter(co=>!hiddenTickers.includes(co.t));
+  const hidden=P.filter(co=>hiddenTickers.includes(co.t));
+  let list=allTickers;
+  if(cfgQ)list=list.filter(co=>co.t.toLowerCase().includes(cfgQ)||co.n.toLowerCase().includes(cfgQ)||co.s.toLowerCase().includes(cfgQ));
+  const totalActive=allTickers.length;
+  const totalCL=allTickers.filter(c=>c.cmfName||c.cmfRut).length;
+  const totalIntl=totalActive-totalCL;
+
+  let h=`<div class="cfg-hdr"><h2>Portafolio</h2><span class="cfg-count">${totalActive} activos · ${totalCL} chilenas · ${totalIntl} internacionales${hidden.length?` · ${hidden.length} ocultos`:''}</span></div>`;
+
+  // Inline add form
+  const secOpts=SECTORS.map(s=>`<option value="${s}">${s}</option>`).join("");
+  const exOpts=Object.entries(EXCHANGES).map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
+  h+=`<div class="add-form"><h3>AGREGAR TICKER</h3>
+    <div class="add-row">
+      <div class="add-fg"><label>Ticker</label><input id="cfgTk" placeholder="Ej: NVDA" maxlength="20" style="width:100px;text-transform:uppercase" onkeydown="if(event.key==='Enter')addTickerManual()" /></div>
+      <div class="add-fg"><label>Nombre empresa</label><input id="cfgNm" placeholder="Ej: NVIDIA Corp." style="width:180px" onkeydown="if(event.key==='Enter')addTickerManual()" /></div>
+      <div class="add-fg"><label>Industria</label><select id="cfgSec" style="width:150px">${secOpts}</select></div>
+      <div class="add-fg"><label>Mercado</label><select id="cfgEx" style="width:100px">${exOpts}</select></div>
+      <button class="add-btn" onclick="addTickerManual()">+ Agregar</button>
+    </div>
+    <div class="add-st" id="cfgSt"></div>
+  </div>`;
+
+  // Filter
+  h+=`<div style="margin-bottom:10px;display:flex;align-items:center"><input class="cfg-search" placeholder="Filtrar activos..." value="${cfgQ}" oninput="cfgSearch(this.value)" /></div>`;
+
+  // Table
+  h+=`<div class="cfg-tbl"><div class="cfg-th"><span>Ticker</span><span>Empresa</span><span>Sector</span><span>Tipo</span><span></span></div>`;
+  if(!list.length)h+=`<div class="emp">Sin resultados.</div>`;
+  list.forEach(co=>{
+    const isCL=co.cmfName||co.cmfRut||co.x==="BCS";
+    const typeClass=isCL?"cl":"intl";
+    const typeLabel=isCL?"BCS":"INTL";
+    h+=`<div class="cfg-tr">
+      <div><span class="tk">${co.t}</span><span class="ex">${co.x}</span></div>
+      <div><div class="cn">${co.n}</div></div>
+      <div><div class="cs">${co.s}</div></div>
+      <span class="cfg-type ${typeClass}">${typeLabel}</span>
+      <div style="text-align:right"><button class="cfg-del" onclick="removeTicker('${co.t}')">Eliminar</button></div>
+    </div>`;
+  });
+  h+=`</div>`;
+  if(hidden.length){
+    h+=`<div style="margin-top:16px"><div class="cfg-hdr"><h2 style="font-size:13px">Activos ocultos</h2></div>`;
+    h+=`<div class="cfg-tbl">`;
+    hidden.forEach(co=>{
+      h+=`<div class="cfg-tr">
+        <div><span class="tk">${co.t}</span></div>
+        <div><div class="cn">${co.n}</div></div>
+        <div><div class="cs">${co.s}</div></div>
+        <span class="cfg-type intl">OCULTO</span>
+        <div style="text-align:right"><button class="cfg-del" onclick="restoreTicker('${co.t}')" style="color:var(--bl);border-color:var(--bld)">Restaurar</button></div>
+      </div>`;
+    });
+    h+=`</div></div>`;
+  }
+  // EmailJS Alert Config
+  const emailList=ALERT_EMAILS.map(e=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="font-family:var(--mn);font-size:12px;color:var(--t1)">${e}</span><button class="cfg-del" onclick="removeAlertEmail('${e}')" style="padding:1px 6px;font-size:8px">✕</button></div>`).join("");
+  h+=`<div style="margin-top:24px;border-top:1px solid var(--bd);padding-top:20px">
+    <div class="cfg-hdr"><h2>Alertas por Email</h2><span class="cfg-count">${ALERT_EMAILS.length} destinatario${ALERT_EMAILS.length!==1?'s':''}</span></div>
+    <p style="font-size:11px;color:var(--t3);margin-bottom:12px;line-height:1.5">Se envía un correo automático el día que un ticker reporta earnings. Máximo una vez por día.</p>
+    <div class="add-form"><h3>DESTINATARIOS</h3>
+      <div style="margin-bottom:10px">${emailList||'<span style="font-size:11px;color:var(--t4)">Sin destinatarios</span>'}</div>
+      <div class="add-row">
+        <div class="add-fg"><label>Agregar correo</label><input id="newEmail" placeholder="correo@ejemplo.cl" style="width:220px" onkeydown="if(event.key==='Enter')addAlertEmail()" /></div>
+        <button class="add-btn" onclick="addAlertEmail()">+ Agregar</button>
+      </div>
+    </div>
+    <div class="add-form" style="margin-top:10px"><h3>CREDENCIALES EMAILJS</h3>
+      <div class="add-row">
+        <div class="add-fg"><label>Service ID</label><input id="ejSvc" value="${EJ.serviceId}" placeholder="service_xxxxxxx" style="width:160px" /></div>
+        <div class="add-fg"><label>Template ID</label><input id="ejTpl" value="${EJ.templateId}" placeholder="template_xxxxxxx" style="width:160px" /></div>
+        <div class="add-fg"><label>Public Key</label><input id="ejKey" value="${EJ.publicKey}" placeholder="XXXXXXXXXXXXXXX" style="width:160px" /></div>
+        <button class="add-btn" onclick="saveEJFields()">Guardar</button>
+        <button class="add-btn" onclick="testAlert()" style="border-color:var(--gnd);color:var(--gn)">Enviar prueba</button>
+      </div>
+      <div class="add-st" id="ejSt">${EJ.serviceId?"✓ Configurado":"Sin configurar — las alertas no se enviarán"}</div>
+    </div>
+  </div>`;
+  panel.innerHTML=h;
+}
+
+function restoreTicker(t){
+  hiddenTickers=hiddenTickers.filter(x=>x!==t);
+  saveCustomTickers();renderCfg();rn();
+}
+
+function saveEJFields(){
+  EJ.serviceId=(document.getElementById("ejSvc")?.value||"").trim();
+  EJ.templateId=(document.getElementById("ejTpl")?.value||"").trim();
+  EJ.publicKey=(document.getElementById("ejKey")?.value||"").trim();
+  saveEJConfig();
+  const st=document.getElementById("ejSt");
+  if(st){st.textContent=EJ.serviceId?"✓ Credenciales guardadas.":"Sin configurar.";st.className="add-st "+(EJ.serviceId?"ok":"err")}
+}
+
+// =======================================================================
+//  ADD / REMOVE TICKERS — Manual inline form
+// =======================================================================
+const SECTORS=["Retail","Banca","Telecom","IT Services","Energía","Holding","Bebidas","Salmón","Agua","Vinos","Naviero","Litio / Químicos","Real Estate","Financiero","Puertos","Healthcare","Fintech","Consumer Elec.","Media / Advert.","E-commerce","Mobility","Cloud / SaaS","Private Equity","GSE","Brokerage","Retail Mascotas","Educación","Minería","Gaming / 3D","Med Devices","Industrials","Life Sciences","Media","Oil & Gas","Químicos","Cloud Banking","Petroquímicos","Semiconductors","Asset Mgmt","Insurance","Aerospace","Auto","Payments","Software","Biotech","Otro"];
+const EXCHANGES={
+  "BCS":"BCS","NYSE":"NYSE","NASDAQ":"NASDAQ","LSE":"LSE","Euronext":"Euronext",
+  "B3":"B3","BMV":"BMV","BME":"BME","TSX":"TSX","ASX":"ASX","JSE":"JSE",
+  "MI":"MI","BVC":"BVC","OTC":"OTC","Otro":"—"
+};
+
+function addTickerManual(){
+  const tk=(document.getElementById("cfgTk")?.value||"").trim().toUpperCase();
+  const nm=(document.getElementById("cfgNm")?.value||"").trim();
+  const sec=document.getElementById("cfgSec")?.value||"Otro";
+  const ex=document.getElementById("cfgEx")?.value||"NYSE";
+  const st=document.getElementById("cfgSt");
+  if(!tk){st.textContent="Ingresa un ticker.";st.className="add-st err";return}
+  if(!nm){st.textContent="Ingresa el nombre de la empresa.";st.className="add-st err";return}
+  if(P.find(c=>c.t===tk)&&!hiddenTickers.includes(tk)){st.textContent=tk+" ya existe.";st.className="add-st err";return}
+  if(hiddenTickers.includes(tk)){hiddenTickers=hiddenTickers.filter(x=>x!==tk);saveCustomTickers();rn();renderCfg();st.textContent="✓ "+tk+" restaurado.";st.className="add-st ok";return}
+  const yr=String(new Date().getFullYear()).slice(2);
+  const isCL=(ex==="BCS");
+  const entry={t:tk,n:nm,s:sec,x:ex,_custom:true};
+  if(isCL){
+    entry.cmfName=tk;
+    entry.q=[{q:"Q1 "+yr,d:""},{q:"Q2 "+yr,d:""},{q:"Q3 "+yr,d:""},{q:"FY "+yr,d:""}];
+  } else {
+    entry.yf=tk;
+    entry.q=[{q:"Q1 "+yr,d:""},{q:"Q2 "+yr,d:""},{q:"Q3 "+yr,d:""}];
+  }
+  P.push(entry);
+  saveCustomTickers();
+  document.getElementById("cfgTk").value="";document.getElementById("cfgNm").value="";
+  st.textContent="✓ "+tk+" agregado. Buscando fechas...";st.className="add-st ok";
+  rn();renderCfg();
+  // Async: fetch dates
+  if(isCL){fCMF().then(()=>{rn();if(activeTab==="cfg")renderCfg()})}
+  else{fetchEarningsDate(entry).then(()=>{saveCustomTickers();rn();if(activeTab==="cfg")renderCfg()})}
+}
+
+async function fetchEarningsDate(entry){
+  const tk=entry.yf||entry.t;
+  const proxies=[u=>"https://api.allorigins.win/raw?url="+encodeURIComponent(u),u=>"https://corsproxy.io/?url="+encodeURIComponent(u)];
+  // Strategy 1: Yahoo v7 quote (lightest endpoint)
+  for(const mk of proxies){
+    try{
+      const r=await fetch(mk("https://query1.finance.yahoo.com/v7/finance/quote?symbols="+tk),{signal:AbortSignal.timeout(4000)});
+      if(!r.ok)continue;const j=await r.json();const q=j.quoteResponse?.result?.[0];
+      if(q?.earningsTimestamp){const d=new Date(q.earningsTimestamp*1000).toISOString().split("T")[0];
+        entry.q=[{q:"Next Earnings",d,_s:"yahoo"}];return}
+      if(q?.earningsTimestampStart){const d=new Date(q.earningsTimestampStart*1000).toISOString().split("T")[0];
+        entry.q=[{q:"Next Earnings",d,_s:"yahoo"}];return}
+    }catch(e){}
+  }
+  // Strategy 2: Yahoo v10 quoteSummary
+  for(const mk of proxies){
+    try{
+      const r=await fetch(mk("https://query1.finance.yahoo.com/v10/finance/quoteSummary/"+tk+"?modules=calendarEvents"),{signal:AbortSignal.timeout(4000)});
+      if(!r.ok)continue;const j=await r.json();const ev=j.quoteSummary?.result?.[0]?.calendarEvents?.earnings;
+      if(ev?.earningsDate?.length){const d=new Date(ev.earningsDate[0].raw*1000).toISOString().split("T")[0];
+        entry.q=[{q:"Next Earnings",d,_s:"yahoo"}];return}
+    }catch(e){}
+  }
+  // Strategy 3: scrape stockanalysis.com (usually not blocked by proxies)
+  for(const mk of proxies){
+    try{
+      const r=await fetch(mk("https://stockanalysis.com/stocks/"+tk.toLowerCase()+"/"),{signal:AbortSignal.timeout(4000)});
+      if(!r.ok)continue;const html=await r.text();
+      const m=html.match(/Earnings Date.*?(\w+ \d{1,2}, \d{4})/s);
+      if(m){const d=new Date(m[1]);if(!isNaN(d)){entry.q=[{q:"Next Earnings",d:d.toISOString().split("T")[0],_s:"yahoo"}];return}}
+    }catch(e){}
+  }
+}
+
+function saveCustomTickers(){
+  const custom=P.filter(c=>c._custom).map(c=>({t:c.t,n:c.n,s:c.s,x:c.x,cmfName:c.cmfName||"",yf:c.yf||"",q:c.q}));
+  if(uf&&dr){dr.child("custom-tickers").set(custom);dr.child("hidden-tickers").set(hiddenTickers)}
+  else{localStorage.setItem("ia-ct",JSON.stringify(custom));localStorage.setItem("ia-ht",JSON.stringify(hiddenTickers))}
+}
+
+function loadCustomTickers(){
+  try{
+    const raw=localStorage.getItem("ia-ct");
+    if(raw){const arr=JSON.parse(raw);arr.forEach(c=>{if(!P.find(p=>p.t===c.t)){c._custom=true;P.push(c)}})}
+    const ht=localStorage.getItem("ia-ht");
+    if(ht)hiddenTickers=JSON.parse(ht);
+  }catch(e){}
+}
+
+function removeTicker(t){
+  if(!confirm("¿Eliminar "+t+" del portafolio?"))return;
+  const idx=P.findIndex(c=>c.t===t&&c._custom);
+  if(idx>=0){P.splice(idx,1)}
+  else{if(!hiddenTickers.includes(t))hiddenTickers.push(t)}
+  saveCustomTickers();rn();if(activeTab==="cfg")renderCfg();
+}
+
+// =======================================================================
+//  EMAIL ALERTS — Sends email on earnings day via EmailJS
+// =======================================================================
+function loadEJConfig(){
+  try{
+    const raw=localStorage.getItem("ia-ej");
+    if(raw){const c=JSON.parse(raw);EJ.serviceId=c.serviceId||"";EJ.templateId=c.templateId||"";EJ.publicKey=c.publicKey||"";if(c.emails&&c.emails.length)ALERT_EMAILS=c.emails}
+  }catch(e){}
+}
+function saveEJConfig(){
+  const data={...EJ,emails:ALERT_EMAILS};
+  localStorage.setItem("ia-ej",JSON.stringify(data));
+  if(uf&&dr)dr.child("emailjs-config").set(data);
+}
+function addAlertEmail(){
+  const input=document.getElementById("newEmail");
+  const email=(input?.value||"").trim().toLowerCase();
+  if(!email||!email.includes("@")){return}
+  if(ALERT_EMAILS.includes(email)){input.value="";return}
+  ALERT_EMAILS.push(email);
+  saveEJConfig();renderCfg();
+}
+function removeAlertEmail(email){
+  ALERT_EMAILS=ALERT_EMAILS.filter(e=>e!==email);
+  saveEJConfig();renderCfg();
+}
+
+function buildEmailHTML(earnings,dateStr){
+  const rows=earnings.map(e=>`
+    <tr>
+      <td style="padding:10px 16px;border-bottom:1px solid #e8e8e8;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:700;color:#1a1a1a;letter-spacing:0.5px">${e.t}</td>
+      <td style="padding:10px 16px;border-bottom:1px solid #e8e8e8;font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;color:#444">${e.n}</td>
+      <td style="padding:10px 16px;border-bottom:1px solid #e8e8e8;font-family:'Courier New',monospace;font-size:12px;color:#666">${e.q}</td>
+      <td style="padding:10px 16px;border-bottom:1px solid #e8e8e8;font-family:'Courier New',monospace;font-size:12px;color:#888">${e.x}</td>
+    </tr>`).join("");
+  return `
+    <div style="max-width:600px;margin:0 auto;font-family:'Helvetica Neue',Arial,sans-serif">
+      <div style="background:#1a1f2e;padding:24px 28px;border-radius:4px 4px 0 0">
+        <div style="font-size:10px;letter-spacing:2px;color:#7a8599;text-transform:uppercase;margin-bottom:4px">Inversiones Adriana</div>
+        <div style="font-size:20px;font-weight:700;color:#ffffff">Earnings Alert</div>
+      </div>
+      <div style="background:#ffffff;padding:24px 28px;border-left:1px solid #e8e8e8;border-right:1px solid #e8e8e8">
+        <p style="font-size:14px;color:#333;line-height:1.6;margin:0 0 20px 0">
+          Hoy <strong>${dateStr}</strong> reporta${earnings.length>1?'n':''} <strong style="color:#1a1f2e">${earnings.length}</strong> acción${earnings.length>1?'es':''} del portafolio:
+        </p>
+        <table style="width:100%;border-collapse:collapse;border:1px solid #e8e8e8;border-radius:4px">
+          <tr style="background:#f5f7fa">
+            <th style="padding:10px 16px;text-align:left;font-family:'Helvetica Neue',Arial,sans-serif;font-size:10px;font-weight:700;color:#7a8599;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #e0e0e0">Ticker</th>
+            <th style="padding:10px 16px;text-align:left;font-family:'Helvetica Neue',Arial,sans-serif;font-size:10px;font-weight:700;color:#7a8599;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #e0e0e0">Empresa</th>
+            <th style="padding:10px 16px;text-align:left;font-family:'Helvetica Neue',Arial,sans-serif;font-size:10px;font-weight:700;color:#7a8599;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #e0e0e0">Quarter</th>
+            <th style="padding:10px 16px;text-align:left;font-family:'Helvetica Neue',Arial,sans-serif;font-size:10px;font-weight:700;color:#7a8599;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #e0e0e0">Mercado</th>
+          </tr>
+          ${rows}
+        </table>
+      </div>
+      <div style="background:#f5f7fa;padding:16px 28px;border:1px solid #e8e8e8;border-top:0;border-radius:0 0 4px 4px">
+        <p style="font-size:11px;color:#999;margin:0;font-family:'Helvetica Neue',Arial,sans-serif">Earnings Calendar — Inversiones Adriana · Este correo se envía automáticamente el día de cada reporte.</p>
+      </div>
+    </div>`;
+}
+
+async function sendEmailJS(toEmail,subject,htmlBody){
+  const res=await fetch("https://api.emailjs.com/api/v1.0/email/send",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      service_id:EJ.serviceId,
+      template_id:EJ.templateId,
+      user_id:EJ.publicKey,
+      template_params:{to_email:toEmail,subject:subject,message:htmlBody}
+    })
+  });
+  if(!res.ok)throw new Error(await res.text());
+  return res;
+}
+
+async function checkAndSendAlerts(){
+  if(!EJ.serviceId||!EJ.templateId||!EJ.publicKey)return;
+  const today=new Date();today.setHours(0,0,0,0);
+  const todayStr=today.toISOString().split("T")[0];
+  const sentKey="ia-alert-"+todayStr;
+  if(localStorage.getItem(sentKey))return;
+  const todayEarnings=P.filter(co=>!hiddenTickers.includes(co.t))
+    .flatMap(co=>co.q.map(q=>({t:co.t,n:co.n,s:co.s,x:co.x,q:q.q,d:q.d})))
+    .filter(e=>e.d===todayStr);
+  if(!todayEarnings.length)return;
+  const html=buildEmailHTML(todayEarnings,fd(todayStr));
+  const subj=`iA Earnings — ${todayEarnings.map(e=>e.t).join(", ")} reporta${todayEarnings.length>1?'n':''} hoy`;
+  try{
+    for(const email of ALERT_EMAILS){await sendEmailJS(email,subj,html)}
+    localStorage.setItem(sentKey,"1");
+    console.log("Alert sent:",todayEarnings.map(e=>e.t).join(", "));
+  }catch(e){console.error("EmailJS error:",e)}
+}
+
+function testAlert(){
+  if(!EJ.serviceId||!EJ.templateId||!EJ.publicKey){alert("Configurá las credenciales de EmailJS primero.");return}
+  const sample=[{t:"NVDA",n:"NVIDIA Corp.",q:"Q1 26",x:"NASDAQ"},{t:"UNH",n:"UnitedHealth Group",q:"Q1 26",x:"NYSE"}];
+  const html=buildEmailHTML(sample,fd(new Date().toISOString().split("T")[0]));
+  sendEmailJS(ALERT_EMAILS[0],"iA Earnings Alert — Prueba",html)
+    .then(()=>alert("✓ Email de prueba enviado a "+ALERT_EMAILS[0]))
+    .catch(e=>alert("✗ Error: "+e.message));
+}
+
+// =======================================================================
+//  INIT
+// =======================================================================
+document.addEventListener("DOMContentLoaded",async()=>{loadEJConfig();iF();if(!uf){lL();loadCustomTickers()}rn();await fCMF();await fYH();rn();checkAndSendAlerts()});
+</script>
+</body>
+</html>
