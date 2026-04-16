@@ -1,0 +1,31 @@
+name: Update Earnings Dates
+
+on:
+  schedule:
+    # Runs every Monday at 11:00 UTC (8:00 AM Chile)
+    - cron: '0 11 * * 1'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  update-dates:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Update earnings dates via Claude AI
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/update-earnings.mjs
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "iA Earnings Bot"
+          git config user.email "bot@iadriana.cl"
+          git add index.html
+          git diff --staged --quiet || (git commit -m "🤖 Auto-update earnings dates $(date +%Y-%m-%d)" && git push)
