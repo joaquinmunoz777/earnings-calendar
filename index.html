@@ -170,7 +170,18 @@ a{color:var(--bl);text-decoration:none}a:hover{text-decoration:underline}
 .cfg-search{padding:6px 10px;border-radius:3px;border:1px solid var(--bd);background:var(--bg);color:var(--t0);font-size:12px;font-family:var(--sn);width:170px;outline:0;margin-left:auto}
 .cfg-search:focus{border-color:var(--bl)}.cfg-search::placeholder{color:var(--t4)}
 
-/* ─── Responsive ─── */
+/* ─── Login Screen ─── */
+#loginScreen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.login-box{background:var(--sf);border:1px solid var(--bd2);border-radius:4px;padding:36px 40px;width:340px;text-align:center}
+.login-brand{font-size:10px;letter-spacing:2px;color:var(--t4);text-transform:uppercase;font-family:var(--mn);margin-bottom:6px}
+.login-title{font-size:18px;font-weight:700;color:var(--t0);margin-bottom:24px}
+.login-box input{width:100%;padding:9px 12px;border-radius:3px;border:1px solid var(--bd);background:var(--bg);color:var(--t0);font-size:13px;font-family:var(--sn);outline:0;text-align:center;letter-spacing:.2em;margin-bottom:10px;transition:border-color .12s}
+.login-box input:focus{border-color:var(--bl)}
+.login-box input::placeholder{letter-spacing:0;color:var(--t4)}
+.login-submit{width:100%;padding:9px;border-radius:3px;border:0;background:var(--bl);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--mn);transition:.12s}
+.login-submit:hover{opacity:.9}
+.login-err{font-size:11px;color:var(--rd);font-family:var(--mn);margin-top:8px;min-height:16px}
+
 @media(max-width:900px){
   .thr,.tr{grid-template-columns:78px 1fr 65px 95px 62px 56px 56px;font-size:9px;padding:8px 8px}
   .hi{flex-direction:column;align-items:flex-start}
@@ -183,6 +194,16 @@ a{color:var(--bl);text-decoration:none}a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-brand">Inversiones Adriana</div>
+    <div class="login-title">Earnings Calendar</div>
+    <input type="password" id="pwInput" placeholder="Contraseña" onkeydown="if(event.key==='Enter')checkPw()" autofocus />
+    <button class="login-submit" onclick="checkPw()">Ingresar</button>
+    <div class="login-err" id="pwErr"></div>
+  </div>
+</div>
+<div id="mainApp" style="display:none">
 <div class="hdr"><div class="hi">
 <div>
   <div class="brand">Inversiones Adriana</div>
@@ -209,12 +230,39 @@ a{color:var(--bl);text-decoration:none}a:hover{text-decoration:underline}
 <div id="cfgPanel"></div>
 </div>
 </div>
+</div><!-- end mainApp -->
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
 // =======================================================================
-//  CONFIG
+//  LOGIN
+// =======================================================================
+const PW_HASH="53d14cd3d84154784a718b170cf331a377741d17cff17676807624cc5ac5d312"; // IADRIANA*0
+async function hashStr(s){const b=new TextEncoder().encode(s);const h=await crypto.subtle.digest("SHA-256",b);return Array.from(new Uint8Array(h)).map(x=>x.toString(16).padStart(2,"0")).join("")}
+async function checkPw(){
+  const val=document.getElementById("pwInput").value;
+  if(!val){document.getElementById("pwErr").textContent="Ingresá la contraseña.";return}
+  const h=await hashStr(val);
+  if(h===PW_HASH){
+    sessionStorage.setItem("ia-auth","1");
+    document.getElementById("loginScreen").style.display="none";
+    document.getElementById("mainApp").style.display="block";
+    if(!uf){lL();loadCustomTickers()}rn();fCMF().then(()=>{fYH();rn();checkAndSendAlerts()});
+  } else {
+    document.getElementById("pwErr").textContent="Contraseña incorrecta.";
+    document.getElementById("pwInput").value="";
+    document.getElementById("pwInput").focus();
+  }
+}
+// Auto-login if already authenticated in this session
+window.addEventListener("DOMContentLoaded",()=>{
+  if(sessionStorage.getItem("ia-auth")==="1"){
+    document.getElementById("loginScreen").style.display="none";
+    document.getElementById("mainApp").style.display="block";
+  }
+  iF();
+});
 // =======================================================================
 const FB={apiKey:"AIzaSyCaveZCUCjaC35VMWSdAX_EgsB-605s5Zo",authDomain:"earnings-calendar-42f02.firebaseapp.com",databaseURL:"https://earnings-calendar-42f02-default-rtdb.firebaseio.com",projectId:"earnings-calendar-42f02",storageBucket:"earnings-calendar-42f02.firebasestorage.app",messagingSenderId:"316391357154",appId:"1:316391357154:web:17fd7cb46b0e2bd32b3cbb"};
 
@@ -248,16 +296,16 @@ const P=[
 {t:"DUNCANFOX",n:"Duncan Fox S.A.",s:"Holding",x:"BCS",cmfName:"DUNCAN FOX",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
 {t:"CCU",n:"Cervecerías Unidas",s:"Bebidas",x:"BCS/NYSE",cmfName:"CERVECERIAS UNIDAS",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
 // INTERNACIONALES
-{t:"CERT",n:"Certara Inc.",s:"Healthcare",x:"NASDAQ",yf:"CERT",q:[{q:"Q1 26",d:"2026-05-13"},{q:"Q2 26",d:"2026-08-06"},{q:"Q3 26",d:"2026-11-05"}]},/*estimated TipRanks 2026-04-17*/
-{t:"GLOB",n:"Globant S.A.",s:"IT Services",x:"NYSE",yf:"GLOB",q:[{q:"Q1 26",d:"2026-05-14"},{q:"Q2 26",d:""},{q:"Q3 26",d:"2026-11-12"}]},/*estimated TipRanks 2026-04-17*/
-{t:"DLO",n:"DLocal Limited",s:"Fintech",x:"NASDAQ",yf:"DLO",q:[{q:"Q1 26",d:"2026-05-14"},{q:"Q2 26",d:""},{q:"Q3 26",d:"2026-11-12"}]},/*confirmed company IR 2026-04-17*/
-{t:"GPRO",n:"GoPro Inc.",s:"Consumer Elec.",x:"NASDAQ",yf:"GPRO",q:[{q:"Q1 26",d:"2026-05-11"},{q:"Q2 26",d:"2026-08-06"},{q:"Q3 26",d:"2026-11-05"}]},/*estimated Benzinga 2026-04-17*/,
-{t:"WPP",n:"WPP plc",s:"Media / Advert.",x:"NYSE/LSE",yf:"WPP",q:[{q:"Q1 26",d:""},{q:"H1 26",d:""},{q:"Q3 26",d:"2026-10-22"}]},/*confirmed TipRanks 2026-04-17*/
-{t:"PYPL",n:"PayPal Holdings",s:"Fintech",x:"NASDAQ",yf:"PYPL",q:[{q:"Q1 26",d:"2026-05-05"},{q:"Q2 26",d:""},{q:"Q3 26",d:"2026-10-29"}]},/*confirmed company IR 2026-04-17*/
-{t:"BABA",n:"Alibaba (ADR)",s:"E-commerce",x:"NYSE",yf:"BABA",q:[{q:"Q4 FY26",d:"2026-05-14"},{q:"Q1 FY27",d:""},{q:"Q2 FY27",d:"2026-11-12"}]},/*confirmed TipRanks 2026-04-17*/
-{t:"UBER",n:"Uber Technologies",s:"Mobility",x:"NYSE",yf:"UBER",q:[{q:"Q1 26",d:"2026-05-06"},{q:"Q2 26",d:""},{q:"Q3 26",d:"2026-11-05"}]},/*confirmed TipRanks 2026-04-17*/,
-{t:"CRM",n:"Salesforce Inc.",s:"Cloud / SaaS",x:"NYSE",yf:"CRM",q:[{q:"Q1 FY27",d:"2026-06-03"},{q:"Q2 FY27",d:""},{q:"Q3 FY27",d:"2026-12-03"}]},/*confirmed TipRanks 2026-04-17*/
-{t:"STNE",n:"StoneCo Ltd.",s:"Fintech Brasil",x:"NASDAQ",yf:"STNE",q:[{q:"Q1 26",d:"2026-05-14"},{q:"Q2 26",d:""},{q:"Q3 26",d:"2026-11-12"}]},/*confirmed company IR 2026-04-17*/
+{t:"CERT",n:"Certara Inc.",s:"Healthcare",x:"NASDAQ",yf:"CERT",q:[{q:"Q1 26",d:"2026-05-11"},{q:"Q2 26",d:"2026-08-06"},{q:"Q3 26",d:"2026-11-05"}]},/*Q1 confirmed IR 2026-04-09*/
+{t:"GLOB",n:"Globant S.A.",s:"IT Services",x:"NYSE",yf:"GLOB",q:[{q:"Q1 26",d:"2026-05-14"},{q:"Q2 26",d:"2026-08-13"},{q:"Q3 26",d:"2026-11-12"}]},/*Q1 confirmed multiple sources*/
+{t:"DLO",n:"DLocal Limited",s:"Fintech",x:"NASDAQ",yf:"DLO",q:[{q:"Q1 26",d:"2026-05-14"},{q:"Q2 26",d:"2026-08-13"},{q:"Q3 26",d:"2026-11-12"}]},/*Q1 confirmed IR 2026-03-31*/
+{t:"GPRO",n:"GoPro Inc.",s:"Consumer Elec.",x:"NASDAQ",yf:"GPRO",q:[{q:"Q1 26",d:"2026-04-30"},{q:"Q2 26",d:"2026-08-06"},{q:"Q3 26",d:"2026-11-05"}]},
+{t:"WPP",n:"WPP plc",s:"Media / Advert.",x:"NYSE/LSE",yf:"WPP",q:[{q:"Q1 26",d:"2026-04-28"},{q:"H1 26",d:"2026-07-31"},{q:"Q3 26",d:"2026-10-22"}]},/*Q1 confirmed 6-K 2026-04-09*/
+{t:"PYPL",n:"PayPal Holdings",s:"Fintech",x:"NASDAQ",yf:"PYPL",q:[{q:"Q1 26",d:"2026-05-05"},{q:"Q2 26",d:"2026-07-30"},{q:"Q3 26",d:"2026-10-29"}]},/*Q1 confirmed WSH*/
+{t:"BABA",n:"Alibaba (ADR)",s:"E-commerce",x:"NYSE",yf:"BABA",q:[{q:"Q4 FY26",d:"2026-05-14"},{q:"Q1 FY27",d:"2026-08-13"},{q:"Q2 FY27",d:"2026-11-12"}]},/*Q4FY26 confirmed TipRanks*/
+{t:"UBER",n:"Uber Technologies",s:"Mobility",x:"NYSE",yf:"UBER",q:[{q:"Q1 26",d:"2026-05-06"},{q:"Q2 26",d:"2026-08-06"},{q:"Q3 26",d:"2026-11-05"}]},
+{t:"CRM",n:"Salesforce Inc.",s:"Cloud / SaaS",x:"NYSE",yf:"CRM",q:[{q:"Q1 FY27",d:"2026-06-03"},{q:"Q2 FY27",d:"2026-08-27"},{q:"Q3 FY27",d:"2026-12-03"}]},/*Q1FY27 confirmed TipRanks*/
+{t:"STNE",n:"StoneCo Ltd.",s:"Fintech Brasil",x:"NASDAQ",yf:"STNE",q:[{q:"Q1 26",d:"2026-05-14"},{q:"Q2 26",d:"2026-08-13"},{q:"Q3 26",d:"2026-11-12"}]},/*Q1 confirmed IR 2026-04-02*/
 {t:"UNH",n:"UnitedHealth Group",s:"Healthcare",x:"NYSE",yf:"UNH",q:[{q:"Q1 26",d:"2026-04-21"},{q:"Q2 26",d:"2026-07-16"},{q:"Q3 26",d:"2026-10-15"}]},/*Q1 confirmed IR 2026-03-17*/
 {t:"KKR",n:"KKR & Co Inc.",s:"Private Equity",x:"NYSE",yf:"KKR",q:[{q:"Q1 26",d:"2026-05-05"},{q:"Q2 26",d:"2026-08-04"},{q:"Q3 26",d:"2026-11-03"}]},/*Q1 confirmed BW 2026-04-02*/
 {t:"FI",n:"Fiserv Inc.",s:"Fintech",x:"NYSE",yf:"FI",q:[{q:"Q1 26",d:"2026-04-30"},{q:"Q2 26",d:"2026-07-30"},{q:"Q3 26",d:"2026-10-29"}]},/*Q1 est. ~Apr28-30*/
@@ -521,7 +569,8 @@ function renderCfg(){
     h+=`</div></div>`;
   }
   // EmailJS Alert Config
-  const emailList=ALERT_EMAILS.map(e=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="font-family:var(--mn);font-size:12px;color:var(--t1)">${e}</span><button class="cfg-del" onclick="removeAlertEmail('${e}')" style="padding:1px 6px;font-size:8px">✕</button></div>`).join("");
+  const maskEmail=e=>{const[u,d]=e.split("@");return u[0]+"***@"+d};
+  const emailList=ALERT_EMAILS.map(e=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="font-family:var(--mn);font-size:12px;color:var(--t1)">${maskEmail(e)}</span><button class="cfg-del" onclick="removeAlertEmail('${e}')" style="padding:1px 6px;font-size:8px">✕</button></div>`).join("");
   h+=`<div style="margin-top:24px;border-top:1px solid var(--bd);padding-top:20px">
     <div class="cfg-hdr"><h2>Alertas por Email</h2><span class="cfg-count">${ALERT_EMAILS.length} destinatario${ALERT_EMAILS.length!==1?'s':''}</span></div>
     <p style="font-size:11px;color:var(--t3);margin-bottom:12px;line-height:1.5">Se envía un correo automático el día que un ticker reporta earnings. Máximo una vez por día.</p>
@@ -764,7 +813,7 @@ function testAlert(){
 // =======================================================================
 //  INIT
 // =======================================================================
-document.addEventListener("DOMContentLoaded",async()=>{loadEJConfig();iF();if(!uf){lL();loadCustomTickers()}rn();await fCMF();await fYH();rn();checkAndSendAlerts()});
+document.addEventListener("DOMContentLoaded",()=>{loadEJConfig()});
 </script>
 </body>
 </html>
