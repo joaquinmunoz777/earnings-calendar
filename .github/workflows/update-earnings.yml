@@ -2,9 +2,8 @@ name: Update Earnings Dates
 
 on:
   schedule:
-    # Runs every Monday at 11:00 UTC (8:00 AM Chile)
     - cron: '0 11 * * 1'
-  workflow_dispatch: # Allows manual trigger from GitHub UI
+  workflow_dispatch:
 
 jobs:
   update-dates:
@@ -28,4 +27,8 @@ jobs:
           git config user.name "iA Earnings Bot"
           git config user.email "bot@iadriana.cl"
           git add index.html
-          git diff --staged --quiet || (git commit -m "🤖 Auto-update earnings dates $(date +%Y-%m-%d)" && git push)
+          if ! git diff --staged --quiet; then
+            git commit -m "🤖 Auto-update earnings dates $(date +%Y-%m-%d)"
+            git pull --rebase origin main
+            git push
+          fi
