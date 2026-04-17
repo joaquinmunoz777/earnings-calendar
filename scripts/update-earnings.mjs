@@ -9,14 +9,20 @@ import { readFileSync, writeFileSync } from 'fs';
 const API_KEY = process.env.ANTHROPIC_API_KEY;
 if (!API_KEY) { console.error('Missing ANTHROPIC_API_KEY'); process.exit(1); }
 
-// Read index.html and extract international tickers
 const html = readFileSync('index.html', 'utf8');
 
-// Extract lines with yf: field (international tickers)
+// Extract international tickers (those with yf: field)
 const tickerRegex = /\{t:"([^"]+)",n:"([^"]+)",s:"([^"]*)",x:"([^"]*)",yf:"([^"]*)",q:\[(.*?)\]\}/g;
 const tickers = [];
 let match;
 while ((match = tickerRegex.exec(html)) !== null) {
+  // Parse existing quarters
+  const qRegex = /\{q:"([^"]*)",d:"([^"]*)"/g;
+  const quarters = [];
+  let qm;
+  while ((qm = qRegex.exec(match[6])) !== null) {
+    quarters.push({ label: qm[1], date: qm[2] });
+  }
   tickers.push({
     ticker: match[1],
     name: match[2],
@@ -24,6 +30,7 @@ while ((match = tickerRegex.exec(html)) !== null) {
     exchange: match[4],
     yf: match[5],
     quartersRaw: match[6],
+    quarters,
     fullMatch: match[0]
   });
 }
@@ -31,10 +38,6 @@ while ((match = tickerRegex.exec(html)) !== null) {
 console.log(`Found ${tickers.length} international tickers to verify.`);
 if (!tickers.length) { console.log('No tickers to update.'); process.exit(0); }
 
-// Build the ticker list for Claude
-const tickerList = tickers.map(t => `${t.ticker} (${t.name}) — ${t.exchange}`).join('\n');
-
-// Call Claude API with web search
 async function callClaude(prompt) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -57,7 +60,6 @@ async function callClaude(prompt) {
   return res.json();
 }
 
-// Extract text from Claude response (may contain multiple content blocks)
 function extractText(response) {
   return response.content
     .filter(b => b.type === 'text')
@@ -65,133 +67,104 @@ function extractText(response) {
     .join('\n');
 }
 
-// Process in batches of 10
-const BATCH_SIZE = 10;
+const BATCH_SIZE = 5;
 const updatedDates = {};
+
+const today = new Date().toISOString().split('T')[0];
 
 for (let i = 0; i < tickers.length; i += BATCH_SIZE) {
   const batch = tickers.slice(i, i + BATCH_SIZE);
-  const batchList = batch.map(t => `- ${t.ticker} (${t.name})`).join('\n');
+  const batchInfo = batch.map(t => {
+    const qs = t.quarters.map(q => `"${q.label}"`).join(', ');
+    return `- ${t.ticker} (${t.name}) — quarters to find: [${qs}]`;
+  }).join('\n');
 
-  console.log(`\nBatch ${Math.floor(i/BATCH_SIZE)+1}: Searching dates for ${batch.length} tickers...`);
+  console.log(`\nBatch ${Math.floor(i/BATCH_SIZE)+1}/${Math.ceil(tickers.length/BATCH_SIZE)}: ${batch.length} tickers...`);
 
-  const today = new Date().toISOString().split('T')[0];
-  const prompt = `Today is ${today}. I need the EXACT CONFIRMED next earnings date for each of these stocks. Search the web for each one — check TipRanks, Investing.com, Nasdaq.com, or the company's IR page.
+  const prompt = `Today is ${today}. Find the earnings report dates for each of these stocks and EACH specific quarter listed. Search the web (TipRanks, Investing.com, Nasdaq.com, company IR pages, SEC filings).
 
-${batchList}
+${batchInfo}
 
-For each ticker, respond with ONLY a JSON array in this exact format, no other text:
+For EACH ticker, return the date for EACH of the quarters listed. Respond with ONLY a JSON array, no other text:
+
 [
-  {"ticker": "CERT", "date": "2026-05-11", "quarter": "Q1 26", "status": "confirmed", "source": "company IR"},
-  {"ticker": "GLOB", "date": "2026-05-14", "quarter": "Q1 26", "status": "estimated", "source": "TipRanks"}
+  {"ticker": "CERT", "dates": {"Q1 26": "2026-05-13", "Q2 26": "2026-08-06", "Q3 26": "2026-11-05"}, "status": "confirmed", "source": "company IR"},
+  {"ticker": "GLOB", "dates": {"Q1 26": "2026-05-14", "Q2 26": "2026-08-13", "Q3 26": "2026-11-12"}, "status": "estimated", "source": "TipRanks"}
 ]
 
 Rules:
-- "date" must be YYYY-MM-DD format
-- "status" must be "confirmed" (from company IR/press release/SEC filing) or "estimated" (from aggregator sites)
-- If you find a date for the NEXT upcoming earnings (after today ${today}), use that
-- If the next earnings already passed, search for the one after that
-- If you cannot find ANY date, set date to "" and status to "unknown"
+- Return ALL quarter labels for each ticker exactly as given in the input
+- "dates" is an object mapping each quarter label to YYYY-MM-DD
+- If you can only find one confirmed date (e.g. Q1 confirmed), provide it. For future quarters that are estimates, use typical quarterly pattern (~90 days apart from Q1)
+- If a specific quarter's date cannot be found or estimated, use empty string ""
+- "status" = "confirmed" if Q1/next earnings is from company IR/SEC, "estimated" otherwise
+- "source" = where you found the primary date
 - Only return the JSON array, nothing else`;
 
   try {
     const response = await callClaude(prompt);
     const text = extractText(response);
-
-    // Extract JSON from response (handle markdown code blocks)
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
       const results = JSON.parse(jsonMatch[0]);
       for (const r of results) {
-        if (r.ticker && r.date) {
+        if (r.ticker && r.dates) {
           updatedDates[r.ticker] = {
-            date: r.date,
-            quarter: r.quarter || '',
+            dates: r.dates,
             status: r.status || 'estimated',
             source: r.source || ''
           };
-          console.log(`  ✓ ${r.ticker}: ${r.date} (${r.status} — ${r.source})`);
-        } else if (r.ticker) {
-          console.log(`  · ${r.ticker}: no date found`);
+          const summary = Object.entries(r.dates).map(([q, d]) => `${q}=${d || 'none'}`).join(', ');
+          console.log(`  ✓ ${r.ticker}: ${summary} (${r.status} — ${r.source})`);
         }
       }
     } else {
-      console.warn('  ⚠ Could not parse Claude response for this batch');
-      console.warn('  Response:', text.substring(0, 200));
+      console.warn('  ⚠ Could not parse response. First 200 chars:', text.substring(0, 200));
     }
   } catch (e) {
     console.error(`  ✗ Batch failed:`, e.message);
   }
 
-  // Rate limit: wait 2s between batches
   if (i + BATCH_SIZE < tickers.length) {
+    console.log('  ⏳ Waiting 65s for rate limit...');
     await new Promise(r => setTimeout(r, 65000));
   }
 }
 
-// Update index.html with new dates
+// Update index.html
 let updatedHtml = html;
 let changeCount = 0;
 
 for (const t of tickers) {
   const update = updatedDates[t.ticker];
-  if (!update || !update.date) continue;
+  if (!update || !update.dates) continue;
 
-  // Parse existing quarters
-  const qRegex = /\{q:"([^"]*)",d:"([^"]*)"/g;
-  const quarters = [];
-  let qm;
-  while ((qm = qRegex.exec(t.quartersRaw)) !== null) {
-    quarters.push({ label: qm[1], date: qm[2] });
-  }
-
-  // Find the quarter to update (match by label or find next empty/outdated)
-  let updated = false;
-  const newQuarters = quarters.map(q => {
-    // If the quarter label matches, update the date
-    if (update.quarter && q.label === update.quarter && q.date !== update.date) {
-      updated = true;
-      return { ...q, date: update.date };
+  let hasChanges = false;
+  const newQuarters = t.quarters.map(q => {
+    const newDate = update.dates[q.label];
+    if (newDate && newDate !== q.date) {
+      hasChanges = true;
+      return { ...q, date: newDate };
     }
     return q;
   });
 
-  // If no label match, try to update the first upcoming quarter with a different date
-  if (!updated && update.date) {
-    const today = new Date();
-    const updateDate = new Date(update.date);
-    for (let qi = 0; qi < newQuarters.length; qi++) {
-      const existingDate = newQuarters[qi].date ? new Date(newQuarters[qi].date) : null;
-      if (!existingDate || (existingDate > today && Math.abs(existingDate - updateDate) > 5 * 86400000)) {
-        // Date differs by more than 5 days — update it
-        if (existingDate && Math.abs(existingDate - updateDate) > 5 * 86400000) {
-          newQuarters[qi] = { ...newQuarters[qi], date: update.date };
-          updated = true;
-          break;
-        }
-      }
-      if (!existingDate) {
-        newQuarters[qi] = { ...newQuarters[qi], date: update.date };
-        updated = true;
-        break;
-      }
-    }
-  }
-
-  if (updated) {
-    // Rebuild the quarters array string
+  if (hasChanges) {
     const newQStr = newQuarters.map(q => `{q:"${q.label}",d:"${q.date}"}`).join(',');
     const newLine = t.fullMatch.replace(t.quartersRaw, newQStr);
 
-    // Also add/update the comment
-    const commentTag = `/*${update.status} ${update.source} ${new Date().toISOString().split('T')[0]}*/`;
-    const oldLineWithComment = new RegExp(
-      t.fullMatch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(,?\\/\\*.*?\\*\\/)?'
-    );
+    const escapedMatch = t.fullMatch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const oldLineWithComment = new RegExp(escapedMatch + '(,\\/\\*[^*]*\\*\\/)?');
 
+    const commentTag = `/*auto ${update.status} ${update.source || '?'} ${today}*/`;
     updatedHtml = updatedHtml.replace(oldLineWithComment, newLine + ',' + commentTag);
     changeCount++;
-    console.log(`\n  📝 Updated ${t.ticker}: ${quarters.map(q=>q.date).join(',')} → ${newQuarters.map(q=>q.date).join(',')}`);
+
+    const before = t.quarters.map(q => `${q.label}=${q.date || '-'}`).join(' | ');
+    const after = newQuarters.map(q => `${q.label}=${q.date || '-'}`).join(' | ');
+    console.log(`  📝 ${t.ticker}:`);
+    console.log(`     before: ${before}`);
+    console.log(`     after:  ${after}`);
   }
 }
 
@@ -199,5 +172,5 @@ if (changeCount > 0) {
   writeFileSync('index.html', updatedHtml);
   console.log(`\n✅ Updated ${changeCount} ticker(s) in index.html`);
 } else {
-  console.log('\n✅ All dates are up to date. No changes needed.');
+  console.log('\n✅ All dates up to date. No changes needed.');
 }
