@@ -240,7 +240,7 @@ a{color:var(--bl);text-decoration:none}a:hover{text-decoration:underline}
 // =======================================================================
 const PW_HASH="53d14cd3d84154784a718b170cf331a377741d17cff17676807624cc5ac5d312"; // IADRIANA*0
 async function hashStr(s){const b=new TextEncoder().encode(s);const h=await crypto.subtle.digest("SHA-256",b);return Array.from(new Uint8Array(h)).map(x=>x.toString(16).padStart(2,"0")).join("")}
-async function checkPw(){
+window.checkPw=async function(){
   const val=document.getElementById("pwInput").value;
   if(!val){document.getElementById("pwErr").textContent="Ingresá la contraseña.";return}
   const h=await hashStr(val);
