@@ -240,6 +240,35 @@ a{color:var(--bl);text-decoration:none}a:hover{text-decoration:underline}
 // =======================================================================
 const PW_HASH="53d14cd3d84154784a718b170cf331a377741d17cff17676807624cc5ac5d312"; // IADRIANA*0
 async function hashStr(s){const b=new TextEncoder().encode(s);const h=await crypto.subtle.digest("SHA-256",b);return Array.from(new Uint8Array(h)).map(x=>x.toString(16).padStart(2,"0")).join("")}
+
+// Centralized boot — runs after authentication (manual login OR auto-login)
+// Renders immediately, then loads Firebase + CMF + Yahoo asynchronously without blocking
+let _booted=false;
+async function bootApp(){
+  if(_booted){console.log("[boot] already booted, skipping");return}
+  _booted=true;
+  console.log("[boot] starting…");
+  // 1) Render immediately with whatever data is hardcoded (intl tickers + cached chilean dates)
+  try{rn();console.log("[boot] initial render OK")}catch(e){console.error("[boot] initial render failed:",e)}
+  // 2) Firebase init (loads saved checkmarks + custom tickers). Doesn't block UI if it fails.
+  try{
+    if(typeof iF==="function")iF();
+    if(typeof lL==="function"&&!uf)lL();
+    if(typeof loadCustomTickers==="function")loadCustomTickers();
+    console.log("[boot] firebase init dispatched")
+  }catch(e){console.error("[boot] firebase init failed:",e)}
+  // 3) CMF scrape — fire and forget. If it fails, intl tickers still work.
+  try{
+    if(typeof fCMF==="function"){
+      fCMF().then(()=>{
+        try{if(typeof fYH==="function")fYH();rn();if(typeof checkAndSendAlerts==="function")checkAndSendAlerts()}
+        catch(e){console.error("[boot] post-CMF error:",e)}
+      }).catch(e=>console.error("[boot] CMF rejected:",e));
+      console.log("[boot] CMF dispatched")
+    }
+  }catch(e){console.error("[boot] CMF dispatch failed:",e)}
+}
+
 window.checkPw=async function(){
   const val=document.getElementById("pwInput").value;
   if(!val){document.getElementById("pwErr").textContent="Ingresá la contraseña.";return}
@@ -248,20 +277,20 @@ window.checkPw=async function(){
     sessionStorage.setItem("ia-auth","1");
     document.getElementById("loginScreen").style.display="none";
     document.getElementById("mainApp").style.display="block";
-    if(!uf){lL();loadCustomTickers()}rn();fCMF().then(()=>{fYH();rn();checkAndSendAlerts()});
+    bootApp();
   } else {
     document.getElementById("pwErr").textContent="Contraseña incorrecta.";
     document.getElementById("pwInput").value="";
     document.getElementById("pwInput").focus();
   }
 }
-// Auto-login if already authenticated in this session
+// Auto-login if already authenticated in this session — also boots the app
 window.addEventListener("DOMContentLoaded",()=>{
   if(sessionStorage.getItem("ia-auth")==="1"){
     document.getElementById("loginScreen").style.display="none";
     document.getElementById("mainApp").style.display="block";
+    bootApp();
   }
-  iF();
 });
 // =======================================================================
 const FB={apiKey:"AIzaSyCaveZCUCjaC35VMWSdAX_EgsB-605s5Zo",authDomain:"earnings-calendar-42f02.firebaseapp.com",databaseURL:"https://earnings-calendar-42f02-default-rtdb.firebaseio.com",projectId:"earnings-calendar-42f02",storageBucket:"earnings-calendar-42f02.firebasestorage.app",messagingSenderId:"316391357154",appId:"1:316391357154:web:17fd7cb46b0e2bd32b3cbb"};
