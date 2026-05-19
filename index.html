@@ -299,6 +299,9 @@ const FB={apiKey:"AIzaSyCaveZCUCjaC35VMWSdAX_EgsB-605s5Zo",authDomain:"earnings-
 let EJ={serviceId:"",templateId:"",publicKey:""};
 let ALERT_EMAILS=["juanpablo@iadriana.cl","jmunoz@iadriana.cl"];
 
+// Finnhub API config — free key from https://finnhub.io (60 calls/min)
+let FINNHUB_KEY="";
+
 // =======================================================================
 //  PORTFOLIO  (cmfRut/cmfName → scrapeado de CMF, yf → Yahoo Finance)
 // =======================================================================
@@ -330,29 +333,29 @@ const P=[
 {t:"DLO",n:"DLocal Limited",s:"Fintech",x:"NASDAQ",yf:"DLO",q:[{q:"Q1 26",d:"2026-05-14"},{q:"Q2 26",d:"2026-08-12"},{q:"Q3 26",d:"2026-11-10"}]},/*auto confirmed company IR 2026-04-20*/
 {t:"GPRO",n:"GoPro Inc.",s:"Consumer Elec.",x:"NASDAQ",yf:"GPRO",q:[{q:"Q1 26",d:"2026-05-11"},{q:"Q2 26",d:"2026-08-06"},{q:"Q3 26",d:"2026-11-05"}]},/*Q1 confirmed TipRanks 2026-04*/
 {t:"WPP",n:"WPP plc",s:"Media / Advert.",x:"NYSE/LSE",yf:"WPP",q:[{q:"Q1 26",d:"2026-04-28"},{q:"H1 26",d:"2026-07-31"},{q:"Q3 26",d:"2026-10-27"}]},/*auto mixed TipRanks (H1 confirmed), StockTitan (Q1 trading update), estimated (Q3) 2026-04-20*/
-{t:"PYPL",n:"PayPal Holdings",s:"Fintech",x:"NASDAQ",yf:"PYPL",q:[{q:"Q1 26",d:"2026-05-05"},{q:"Q2 26",d:"2026-07-30"},{q:"Q3 26",d:"2026-10-29"}]},/*Q1 confirmed WSH*/
+{t:"PYPL",n:"PayPal Holdings",s:"Fintech",x:"NASDAQ",yf:"PYPL",q:[{q:"Q1 26",d:"2026-05-05"},{q:"Q2 26",d:"2026-07-28"},{q:"Q3 26",d:"2026-10-27"}]},/*Q1 REPORTED;Q2/Q3 confirmed SimplyWallSt 2026-05*/
 {t:"BABA",n:"Alibaba (ADR)",s:"E-commerce",x:"NYSE",yf:"BABA",q:[{q:"Q4 FY26",d:"2026-05-14"},{q:"Q1 FY27",d:"2026-08-13"},{q:"Q2 FY27",d:"2026-11-12"}]},/*Q4FY26 confirmed TipRanks*/
-{t:"UBER",n:"Uber Technologies",s:"Mobility",x:"NYSE",yf:"UBER",q:[{q:"Q1 26",d:"2026-05-06"},{q:"Q2 26",d:"2026-08-06"},{q:"Q3 26",d:"2026-11-05"}]},
-{t:"CRM",n:"Salesforce Inc.",s:"Cloud / SaaS",x:"NYSE",yf:"CRM",q:[{q:"Q1 FY27",d:"2026-06-03"},{q:"Q2 FY27",d:"2026-08-27"},{q:"Q3 FY27",d:"2026-12-03"}]},/*Q1FY27 confirmed TipRanks*/
+{t:"UBER",n:"Uber Technologies",s:"Mobility",x:"NYSE",yf:"UBER",q:[{q:"Q1 26",d:"2026-05-06"},{q:"Q2 26",d:"2026-08-05"},{q:"Q3 26",d:"2026-11-05"}]},/*Q1 REPORTED;Q2 confirmed public.com*/
+{t:"CRM",n:"Salesforce Inc.",s:"Cloud / SaaS",x:"NYSE",yf:"CRM",q:[{q:"Q1 FY27",d:"2026-05-27"},{q:"Q2 FY27",d:"2026-08-27"},{q:"Q3 FY27",d:"2026-12-03"}]},/*Q1FY27 confirmed Salesforce IR 2026-05*/
 {t:"STNE",n:"StoneCo Ltd.",s:"Fintech Brasil",x:"NASDAQ",yf:"STNE",q:[{q:"Q1 26",d:"2026-05-14"},{q:"Q2 26",d:"2026-08-13"},{q:"Q3 26",d:"2026-11-12"}]},/*Q1 confirmed IR 2026-04-02*/
-{t:"UNH",n:"UnitedHealth Group",s:"Healthcare",x:"NYSE",yf:"UNH",q:[{q:"Q1 26",d:"2026-04-21"},{q:"Q2 26",d:"2026-07-16"},{q:"Q3 26",d:"2026-10-15"}]},/*Q1 confirmed IR 2026-03-17*/
+{t:"UNH",n:"UnitedHealth Group",s:"Healthcare",x:"NYSE",yf:"UNH",q:[{q:"Q1 26",d:"2026-04-21"},{q:"Q2 26",d:"2026-07-10"},{q:"Q3 26",d:"2026-10-15"}]},/*Q1 REPORTED;Q2 confirmed TipRanks*/
 {t:"KKR",n:"KKR & Co Inc.",s:"Private Equity",x:"NYSE",yf:"KKR",q:[{q:"Q1 26",d:"2026-05-05"},{q:"Q2 26",d:"2026-08-04"},{q:"Q3 26",d:"2026-11-03"}]},/*Q1 confirmed BW 2026-04-02*/
-{t:"FI",n:"Fiserv Inc.",s:"Fintech",x:"NYSE",yf:"FI",q:[{q:"Q1 26",d:"2026-05-05"},{q:"Q2 26",d:"2026-07-30"},{q:"Q3 26",d:"2026-10-29"}]},/*Q1 confirmed Fiserv IR 2026-04-20*/
-{t:"FNMA",n:"Fannie Mae",s:"GSE",x:"OTC",yf:"FNMA",q:[{q:"Q1 26",d:"2026-05-08"},{q:"Q2 26",d:"2026-08-07"},{q:"Q3 26",d:"2026-11-06"}]},/*Q1 est. based on hist.*/
-{t:"AVAL",n:"Grupo Aval",s:"Banca Colombia",x:"NYSE",yf:"AVAL",q:[{q:"Q1 26",d:"2026-05-20"},{q:"Q2 26",d:"2026-08-20"},{q:"Q3 26",d:"2026-11-19"}]},/*Q1 est. Investing.com*/
+{t:"FI",n:"Fiserv Inc.",s:"Fintech",x:"NYSE",yf:"FI",q:[{q:"Q1 26",d:"2026-05-05"},{q:"Q2 26",d:"2026-07-22"},{q:"Q3 26",d:"2026-10-29"}]},/*Q1 REPORTED;Q2 confirmed public.com*/
+{t:"FNMA",n:"Fannie Mae",s:"GSE",x:"OTC",yf:"FNMA",q:[{q:"Q1 26",d:"2026-04-29"},{q:"Q2 26",d:"2026-08-07"},{q:"Q3 26",d:"2026-11-06"}]},/*Q1 REPORTED 2026-04-29*/
+{t:"AVAL",n:"Grupo Aval",s:"Banca Colombia",x:"NYSE",yf:"AVAL",q:[{q:"Q1 26",d:"2026-05-13"},{q:"Q2 26",d:"2026-08-13"},{q:"Q3 26",d:"2026-11-12"}]},/*Q1 REPORTED 2026-05-13*/
 {t:"XP",n:"XP Inc.",s:"Brokerage Brasil",x:"NASDAQ",yf:"XP",q:[{q:"Q1 26",d:"2026-05-05"},{q:"Q2 26",d:"2026-08-04"},{q:"Q3 26",d:"2026-11-03"}]},/*Q1 TradingView Investing*/
 {t:"WOOF",n:"Petco Health",s:"Retail Mascotas",x:"NASDAQ",yf:"WOOF",q:[{q:"Q1 FY27",d:"2026-05-27"},{q:"Q2 FY27",d:"2026-08-27"},{q:"Q3 FY27",d:"2026-11-27"}]},/*auto confirmed TipRanks 2026-04-20*/
 {t:"NEXI",n:"Nexi SpA",s:"Payments Italia",x:"MI",q:[{q:"H1 26",d:"2026-07-30"},{q:"9M 26",d:"2026-11-05"}]},
 {t:"TAL",n:"TAL Education",s:"Educación China",x:"NYSE",yf:"TAL",q:[{q:"Q4 FY26",d:"2026-04-23"},{q:"Q1 FY27",d:"2026-07-23"},{q:"Q2 FY27",d:"2026-10-23"}]},/*auto confirmed company IR 2026-04-20*/
-{t:"SSW",n:"Sibanye Stillwater",s:"Minería PGMs",x:"JSE/NYSE",yf:"SBSW",q:[{q:"H1 26",d:"2026-05-08"}]},/*auto confirmed Investing.com 2026-04-20*/
+{t:"SSW",n:"Sibanye Stillwater",s:"Minería PGMs",x:"JSE/NYSE",yf:"SBSW",q:[{q:"Q1 26",d:"2026-05-06"},{q:"H1 26",d:"2026-08-28"}]},/*Q1 op-update REPORTED;H1 est. historical*/
 {t:"U",n:"Unity Software",s:"Gaming / 3D",x:"NYSE",yf:"U",q:[{q:"Q1 26",d:"2026-05-12"},{q:"Q2 26",d:"2026-08-06"},{q:"Q3 26",d:"2026-11-05"}]},/*Q1 confirmed TipRanks/Investing*/
 {t:"SNN",n:"Smith & Nephew",s:"Med Devices",x:"NYSE/LSE",yf:"SNN",q:[{q:"Q1 26",d:"2026-05-06"},{q:"H1 26",d:"2026-07-30"},{q:"Q3 26",d:"2026-11-05"}]},/*Q1 confirmed IR 2026-04-22*/
 {t:"DVI",n:"Banco Davivienda",s:"Banca Colombia",x:"BVC",q:[{q:"Q1 26",d:"2026-05-21"},{q:"Q2 26",d:"2026-08-20"},{q:"Q3 26",d:"2026-11-19"}]},
-{t:"CMCO",n:"Columbus McKinnon",s:"Industrials",x:"NASDAQ",yf:"CMCO",q:[{q:"Q4 FY26",d:"2026-05-28"},{q:"Q1 FY27",d:"2026-08-06"},{q:"Q2 FY27",d:"2026-11-05"}]},
+{t:"CMCO",n:"Columbus McKinnon",s:"Industrials",x:"NASDAQ",yf:"CMCO",q:[{q:"Q4 FY26",d:"2026-05-27"},{q:"Q1 FY27",d:"2026-08-06"},{q:"Q2 FY27",d:"2026-11-05"}]},/*Q4FY26 confirmed MarketBeat*/
 {t:"AVTR",n:"Avantor Inc.",s:"Life Sciences",x:"NYSE",yf:"AVTR",q:[{q:"Q1 26",d:"2026-04-29"},{q:"Q2 26",d:"2026-07-28"},{q:"Q3 26",d:"2026-10-26"}]},/*auto confirmed company IR 2026-04-22*/
 {t:"TV",n:"TelevisaUnivision",s:"Media México",x:"NYSE",yf:"TV",q:[{q:"Q1 26",d:"2026-04-28"},{q:"Q2 26",d:"2026-07-27"},{q:"Q3 26",d:"2026-10-26"}]},/*auto confirmed company IR 2026-04-22*/
 {t:"HSIC",n:"Henry Schein",s:"Healthcare Dist",x:"NASDAQ",yf:"HSIC",q:[{q:"Q1 26",d:"2026-05-05"},{q:"Q2 26",d:"2026-08-03"},{q:"Q3 26",d:"2026-11-02"}]},/*auto estimated company IR 2026-04-22*/
-{t:"BUR",n:"Burford Capital",s:"Litigation Fin.",x:"NYSE",yf:"BUR",q:[{q:"H1 26",d:"2026-06-16"}]},/*auto estimated TipRanks 2026-04-20*/,
+{t:"BUR",n:"Burford Capital",s:"Litigation Fin.",x:"NYSE",yf:"BUR",q:[{q:"Q1 26",d:"2026-05-08"},{q:"Q2 26",d:"2026-08-07"}]},/*Q1 REPORTED 2026-05-08*/,
 {t:"MBRFY",n:"Marfrig Foods",s:"Cárnica Brasil",x:"OTC/B3",q:[{q:"Q1 26",d:"2026-05-14"},{q:"Q2 26",d:"2026-08-13"},{q:"Q3 26",d:"2026-11-12"}]},
 {t:"GPRK",n:"GeoPark Ltd.",s:"Oil&Gas LatAm",x:"NYSE",yf:"GPRK",q:[{q:"Q1 26",d:"2026-05-06"},{q:"Q2 26",d:"2026-08-06"},{q:"Q3 26",d:"2026-11-05"}]},/*Q1 est. public.com*/
 {t:"HAPV3",n:"Hapvida",s:"Healthcare Brasil",x:"B3",q:[{q:"Q1 26",d:"2026-05-14"},{q:"Q2 26",d:"2026-08-13"},{q:"Q3 26",d:"2026-11-12"}]},
@@ -360,7 +363,7 @@ const P=[
 {t:"CS",n:"Capstone Copper",s:"Minería Cobre",x:"TSX",q:[{q:"Q1 26",d:"2026-05-07"},{q:"Q2 26",d:"2026-08-06"},{q:"Q3 26",d:"2026-11-05"}]},
 {t:"AXTA",n:"Axalta Coating",s:"Químicos",x:"NYSE",yf:"AXTA",q:[{q:"Q1 26",d:"2026-04-30"},{q:"Q2 26",d:"2026-07-29"},{q:"Q3 26",d:"2026-10-28"}]},/*auto confirmed company IR 2026-04-20*/
 {t:"AKZO",n:"Akzo Nobel N.V.",s:"Químicos",x:"Euronext",q:[{q:"Q1 26",d:"2026-04-22"},{q:"Q2 26",d:"2026-07-22"},{q:"Q3 26",d:"2026-10-21"}]},/*Q1 REPORTED 2026-04-22*/
-{t:"NCNO",n:"nCino Inc.",s:"Cloud Banking",x:"NASDAQ",yf:"NCNO",q:[{q:"Q1 FY27",d:"2026-05-28"},{q:"Q2 FY27",d:"2026-09-01"},{q:"Q3 FY27",d:"2026-12-01"}]},/*auto estimated historical pattern 2026-04-20*/
+{t:"NCNO",n:"nCino Inc.",s:"Cloud Banking",x:"NASDAQ",yf:"NCNO",q:[{q:"Q1 FY27",d:"2026-05-27"},{q:"Q2 FY27",d:"2026-09-01"},{q:"Q3 FY27",d:"2026-12-01"}]},/*Q1FY27 confirmed nCino IR 2026-05-14*/
 {t:"REP",n:"Repsol S.A.",s:"Oil&Gas España",x:"BME",q:[{q:"Q1 26",d:"2026-05-07"},{q:"Q2 26",d:"2026-07-23"},{q:"Q3 26",d:"2026-10-29"}]},
 {t:"ALPEK",n:"Alpek SAB",s:"Petroquímicos MX",x:"BMV",q:[{q:"Q1 26",d:"2026-04-23"},{q:"Q2 26",d:"2026-07-23"},{q:"Q3 26",d:"2026-10-22"}]},
 {t:"TSORF",n:"Tesoro Gold",s:"Minería Gold",x:"ASX/OTC",q:[{q:"FY 26",d:"2026-09-17"}]},
@@ -620,8 +623,36 @@ function renderCfg(){
       </div>
       <div class="add-st" id="ejSt">${EJ.serviceId?"✓ Configurado":"Sin configurar — las alertas no se enviarán"}</div>
     </div>
+  </div>
+  <div style="margin-top:24px;border-top:1px solid var(--bd);padding-top:20px">
+    <div class="cfg-hdr"><h2>API de Datos Financieros</h2><span class="cfg-count">${FINNHUB_KEY?"Finnhub configurada":"Sin configurar"}</span></div>
+    <p style="font-size:11px;color:var(--t3);margin-bottom:12px;line-height:1.5">Cuando agregás un ticker internacional nuevo, se buscan automáticamente sus fechas de earnings. Con Finnhub se obtienen hasta 4 trimestres confirmados (gratis, 60 calls/min). Sin key se usa Yahoo (solo próxima fecha). Conseguí tu key gratis en <a href="https://finnhub.io/register" target="_blank" style="color:var(--bl)">finnhub.io/register</a>.</p>
+    <div class="add-form"><h3>FINNHUB API KEY</h3>
+      <div class="add-row">
+        <div class="add-fg"><label>API Key</label><input id="fhKey" value="${FINNHUB_KEY?'****'+FINNHUB_KEY.slice(-4):''}" placeholder="cv0xx...xxxxx" style="width:280px" /></div>
+        <button class="add-btn" onclick="saveFinnhubKey()">Guardar</button>
+        <button class="add-btn" onclick="clearFinnhubKey()" style="border-color:var(--rdd);color:var(--rd)">Borrar</button>
+      </div>
+      <div class="add-st" id="fhSt">${FINNHUB_KEY?"✓ Key guardada":"Sin key — fallback a Yahoo"}</div>
+    </div>
   </div>`;
   panel.innerHTML=h;
+}
+
+function saveFinnhubKey(){
+  const v=(document.getElementById("fhKey")?.value||"").trim();
+  // Don't save the masked placeholder
+  if(v.startsWith("****"))return;
+  FINNHUB_KEY=v;
+  saveEJConfig();
+  const st=document.getElementById("fhSt");
+  if(st){st.textContent=FINNHUB_KEY?"✓ Key guardada":"Sin key";st.className="add-st "+(FINNHUB_KEY?"ok":"err")}
+  renderCfg();
+}
+function clearFinnhubKey(){
+  FINNHUB_KEY="";
+  saveEJConfig();
+  renderCfg();
 }
 
 function restoreTicker(t){
@@ -648,7 +679,7 @@ const EXCHANGES={
   "MI":"MI","BVC":"BVC","OTC":"OTC","Otro":"—"
 };
 
-function addTickerManual(){
+async function addTickerManual(){
   const tk=(document.getElementById("cfgTk")?.value||"").trim().toUpperCase();
   const nm=(document.getElementById("cfgNm")?.value||"").trim();
   const sec=document.getElementById("cfgSec")?.value||"Otro";
@@ -671,45 +702,79 @@ function addTickerManual(){
   P.push(entry);
   saveCustomTickers();
   document.getElementById("cfgTk").value="";document.getElementById("cfgNm").value="";
-  st.textContent="✓ "+tk+" agregado. Buscando fechas...";st.className="add-st ok";
+  const srcLbl=isCL?"CMF":(FINNHUB_KEY?"Finnhub":"Yahoo (sin key Finnhub)");
+  st.textContent=`✓ ${tk} agregado. Buscando fechas en ${srcLbl}…`;st.className="add-st ok";
   rn();renderCfg();
   // Async: fetch dates
-  if(isCL){fCMF().then(()=>{rn();if(activeTab==="cfg")renderCfg()})}
-  else{fetchEarningsDate(entry).then(()=>{saveCustomTickers();rn();if(activeTab==="cfg")renderCfg()})}
+  try{
+    if(isCL){await fCMF()}
+    else{await fetchEarningsDate(entry)}
+    saveCustomTickers();rn();
+    if(activeTab==="cfg")renderCfg();
+    const found=entry.q.filter(x=>x.d).length;
+    const stNow=document.getElementById("cfgSt");
+    if(stNow){
+      if(found){stNow.textContent=`✓ ${tk} agregado · ${found} fecha${found>1?'s':''} encontrada${found>1?'s':''} (${srcLbl}).`;stNow.className="add-st ok"}
+      else{stNow.textContent=`⚠ ${tk} agregado, pero no se encontraron fechas. Edita manualmente desde el calendario.`;stNow.className="add-st err"}
+    }
+  }catch(e){
+    console.error("[addTicker] fetch failed:",e);
+    const stNow=document.getElementById("cfgSt");
+    if(stNow){stNow.textContent=`⚠ ${tk} agregado, pero falló la búsqueda de fechas: ${e.message||e}`;stNow.className="add-st err"}
+  }
 }
 
+// Fetch up to 4 confirmed earnings dates using Finnhub API (free, 60 calls/min)
+// Falls back to Yahoo Finance via CORS proxy if Finnhub key not set or fails
 async function fetchEarningsDate(entry){
   const tk=entry.yf||entry.t;
+  // Strategy 1: Finnhub earnings calendar (preferred — confirmed dates per quarter)
+  if(FINNHUB_KEY){
+    try{
+      const today=new Date();
+      const start=today.toISOString().split("T")[0];
+      const end=new Date(today.getFullYear()+1,today.getMonth(),today.getDate()).toISOString().split("T")[0];
+      const url=`https://finnhub.io/api/v1/calendar/earnings?from=${start}&to=${end}&symbol=${encodeURIComponent(tk)}&token=${FINNHUB_KEY}`;
+      const r=await fetch(url,{signal:AbortSignal.timeout(8000)});
+      if(r.ok){
+        const j=await r.json();
+        const events=(j.earningsCalendar||[]).filter(e=>e.date).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,4);
+        if(events.length){
+          entry.q=events.map(e=>{
+            const yr=String(e.year||today.getFullYear()).slice(2);
+            const lbl=e.quarter?`Q${e.quarter} ${yr}`:`Earnings`;
+            return{q:lbl,d:e.date,_s:"finnhub"};
+          });
+          console.log(`[finnhub] ${tk}: ${events.length} dates found`);
+          return;
+        }
+        console.warn(`[finnhub] ${tk}: no earnings calendar entries`);
+      } else {
+        console.warn(`[finnhub] ${tk}: HTTP ${r.status}`);
+      }
+    }catch(e){console.warn(`[finnhub] ${tk} error:`,e.message)}
+  }
+  // Strategy 2: Yahoo via proxies (fallback — only finds next earnings, not all quarters)
   const proxies=[u=>"https://api.allorigins.win/raw?url="+encodeURIComponent(u),u=>"https://corsproxy.io/?url="+encodeURIComponent(u)];
-  // Strategy 1: Yahoo v7 quote (lightest endpoint)
   for(const mk of proxies){
     try{
       const r=await fetch(mk("https://query1.finance.yahoo.com/v7/finance/quote?symbols="+tk),{signal:AbortSignal.timeout(4000)});
       if(!r.ok)continue;const j=await r.json();const q=j.quoteResponse?.result?.[0];
       if(q?.earningsTimestamp){const d=new Date(q.earningsTimestamp*1000).toISOString().split("T")[0];
-        entry.q=[{q:"Next Earnings",d,_s:"yahoo"}];return}
+        entry.q=[{q:"Próximo",d,_s:"yahoo"}];console.log(`[yahoo] ${tk}: ${d}`);return}
       if(q?.earningsTimestampStart){const d=new Date(q.earningsTimestampStart*1000).toISOString().split("T")[0];
-        entry.q=[{q:"Next Earnings",d,_s:"yahoo"}];return}
+        entry.q=[{q:"Próximo",d,_s:"yahoo"}];console.log(`[yahoo] ${tk}: ${d}`);return}
     }catch(e){}
   }
-  // Strategy 2: Yahoo v10 quoteSummary
   for(const mk of proxies){
     try{
       const r=await fetch(mk("https://query1.finance.yahoo.com/v10/finance/quoteSummary/"+tk+"?modules=calendarEvents"),{signal:AbortSignal.timeout(4000)});
       if(!r.ok)continue;const j=await r.json();const ev=j.quoteSummary?.result?.[0]?.calendarEvents?.earnings;
       if(ev?.earningsDate?.length){const d=new Date(ev.earningsDate[0].raw*1000).toISOString().split("T")[0];
-        entry.q=[{q:"Next Earnings",d,_s:"yahoo"}];return}
+        entry.q=[{q:"Próximo",d,_s:"yahoo"}];console.log(`[yahoo] ${tk}: ${d}`);return}
     }catch(e){}
   }
-  // Strategy 3: scrape stockanalysis.com (usually not blocked by proxies)
-  for(const mk of proxies){
-    try{
-      const r=await fetch(mk("https://stockanalysis.com/stocks/"+tk.toLowerCase()+"/"),{signal:AbortSignal.timeout(4000)});
-      if(!r.ok)continue;const html=await r.text();
-      const m=html.match(/Earnings Date.*?(\w+ \d{1,2}, \d{4})/s);
-      if(m){const d=new Date(m[1]);if(!isNaN(d)){entry.q=[{q:"Next Earnings",d:d.toISOString().split("T")[0],_s:"yahoo"}];return}}
-    }catch(e){}
-  }
+  console.warn(`[fetchEarnings] ${tk}: no dates found from any source`);
 }
 
 function saveCustomTickers(){
@@ -741,11 +806,11 @@ function removeTicker(t){
 function loadEJConfig(){
   try{
     const raw=localStorage.getItem("ia-ej");
-    if(raw){const c=JSON.parse(raw);EJ.serviceId=c.serviceId||"";EJ.templateId=c.templateId||"";EJ.publicKey=c.publicKey||"";if(c.emails&&c.emails.length)ALERT_EMAILS=c.emails}
+    if(raw){const c=JSON.parse(raw);EJ.serviceId=c.serviceId||"";EJ.templateId=c.templateId||"";EJ.publicKey=c.publicKey||"";if(c.emails&&c.emails.length)ALERT_EMAILS=c.emails;FINNHUB_KEY=c.finnhubKey||""}
   }catch(e){}
 }
 function saveEJConfig(){
-  const data={...EJ,emails:ALERT_EMAILS};
+  const data={...EJ,emails:ALERT_EMAILS,finnhubKey:FINNHUB_KEY};
   localStorage.setItem("ia-ej",JSON.stringify(data));
   if(uf&&dr)dr.child("emailjs-config").set(data);
 }
