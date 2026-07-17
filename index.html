@@ -38,7 +38,7 @@ body{background:var(--bg);color:var(--t0);font-family:var(--sn);min-height:100vh
 .hdr{background:rgba(29,29,31,.72);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid rgba(255,255,255,.08);padding:22px 32px 20px;position:sticky;top:0;z-index:100}
 .hi{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
 .brand{font-family:var(--sn);font-size:11px;color:var(--t3);letter-spacing:.14em;text-transform:uppercase;font-weight:500}
-h1{font-size:26px;font-weight:600;letter-spacing:-.022em;margin-top:3px;color:var(--t0);background:linear-gradient(180deg,#fff 0%,#d1d1d6 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+h1{font-size:26px;font-weight:600;letter-spacing:-.022em;margin-top:3px;color:#fff}
 .sub{color:var(--t3);font-size:14px;margin-top:4px;font-weight:400;letter-spacing:-.01em}
 .conn{font-size:11px;color:var(--t4);display:flex;align-items:center;gap:5px;margin-top:6px;font-family:var(--sn);font-weight:400}
 .dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:2px;box-shadow:0 0 8px currentColor}
@@ -46,9 +46,23 @@ h1{font-size:26px;font-weight:600;letter-spacing:-.022em;margin-top:3px;color:va
 
 /* ─── KPI boxes — Apple frosted cards ─── */
 .sts{display:flex;gap:10px;flex-wrap:wrap}
-.sb{background:linear-gradient(145deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px 18px;min-width:108px;backdrop-filter:blur(10px)}
+.sb{display:flex;align-items:center;gap:12px;background:linear-gradient(145deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px 16px;min-width:120px;backdrop-filter:blur(10px)}
 .sl{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;font-family:var(--sn);margin-bottom:3px;font-weight:600}
 .sv{font-size:19px;font-weight:600;font-family:var(--mn);letter-spacing:-.01em}
+.ring{position:relative;width:38px;height:38px;flex:none}
+.ring::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--rc) calc(var(--rp)*3.6deg),rgba(255,255,255,.1) 0)}
+.ring::after{content:'';position:absolute;inset:4px;border-radius:50%;background:#161618}
+.ring span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mn);font-size:9px;font-weight:600;color:var(--t1);z-index:1}
+/* ─── Hero — próximo reporte ─── */
+.hero{display:flex;justify-content:space-between;align-items:center;gap:20px;background:linear-gradient(135deg,rgba(255,214,10,.1),rgba(255,255,255,.02));border:1px solid rgba(255,214,10,.22);border-radius:18px;padding:20px 26px;margin-bottom:16px}
+.hero-k{font-size:11px;color:var(--yw);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:8px}
+.hero-t{font-family:var(--mn);font-size:28px;font-weight:700;color:var(--t0);letter-spacing:-.01em}
+.hero-x{font-family:var(--sn);font-size:12px;color:var(--t4);font-weight:500;margin-left:8px;letter-spacing:0}
+.hero-n{font-size:14px;color:var(--t2);margin-top:4px}
+.hero-r{text-align:right;flex:none}
+.hero-num{font-family:var(--mn);font-size:42px;font-weight:700;line-height:1;color:var(--yw)}
+.hero-unit{font-size:12px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+.hero-date{font-size:12px;color:var(--t4);margin-top:6px;font-family:var(--mn)}
 
 /* ─── Content ─── */
 .cnt{max-width:1280px;margin:0 auto;padding:28px 32px 60px}
@@ -58,7 +72,7 @@ h1{font-size:26px;font-weight:600;letter-spacing:-.022em;margin-top:3px;color:va
 .fb{padding:7px 16px;border-radius:980px;border:1px solid transparent;background:rgba(255,255,255,.05);color:var(--t2);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sn);transition:all .2s cubic-bezier(.4,0,.2,1);letter-spacing:-.01em}
 .fb:hover{color:var(--t0);background:rgba(255,255,255,.1)}
 .fb.a{background:var(--t0);color:#000;font-weight:600;border-color:transparent}
-.rb{margin-left:auto;padding:7px 14px;border-radius:980px;border:1px solid var(--bd);background:transparent;color:var(--t2);font-size:12px;font-weight:500;cursor:pointer;font-family:var(--sn);transition:.2s;letter-spacing:-.01em}
+.rb{padding:7px 14px;border-radius:980px;border:1px solid var(--bd);background:transparent;color:var(--t2);font-size:12px;font-weight:500;cursor:pointer;font-family:var(--sn);transition:.2s;letter-spacing:-.01em}
 .rb:hover{background:rgba(255,255,255,.08);color:var(--t0);border-color:var(--bd2)}.rb:disabled{opacity:.3;cursor:not-allowed}
 .si{padding:8px 14px;border-radius:980px;border:1px solid var(--bd);background:rgba(255,255,255,.05);color:var(--t0);font-size:13px;font-family:var(--sn);width:200px;outline:0;transition:all .2s}
 .si:focus{border-color:var(--bl);background:rgba(41,151,255,.08);box-shadow:0 0 0 4px rgba(41,151,255,.1)}.si::placeholder{color:var(--t4)}
@@ -70,6 +84,15 @@ h1{font-size:26px;font-weight:600;letter-spacing:-.022em;margin-top:3px;color:va
 .tr:last-child{border-bottom:0}
 .tr:hover{background:rgba(255,255,255,.04)}
 .tr.imm{background:rgba(255,214,10,.06);border-left:2px solid var(--yw);padding-left:18px}
+.tr.today{background:rgba(255,69,58,.08);border-left:2px solid var(--rd);padding-left:18px}
+/* ─── Group headers ─── */
+.grp{display:flex;align-items:center;gap:8px;padding:12px 20px 8px;font-size:11px;font-weight:600;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;background:rgba(255,255,255,.015);border-bottom:1px solid rgba(255,255,255,.05)}
+.grp-c{font-family:var(--mn);font-size:10px;color:var(--t4);background:rgba(255,255,255,.06);padding:1px 7px;border-radius:980px}
+/* ─── View toggle ─── */
+.vw-tog{margin-left:auto;display:flex;gap:2px;background:rgba(255,255,255,.05);border-radius:980px;padding:3px}
+.vwb{padding:6px 14px;border:0;background:0;color:var(--t2);font-size:12px;font-weight:500;font-family:var(--sn);cursor:pointer;border-radius:980px;transition:.2s}
+.vwb:hover{color:var(--t0)}
+.vwb.a{background:rgba(255,255,255,.12);color:var(--t0)}
 
 /* ─── Cell typography ─── */
 .tk{font-family:var(--mn);font-size:14px;font-weight:600;color:var(--t0);letter-spacing:0}
@@ -81,10 +104,11 @@ h1{font-size:26px;font-weight:600;letter-spacing:-.022em;margin-top:3px;color:va
 .ds{font-size:11px;font-family:var(--mn);margin-top:2px;font-weight:400}
 
 /* ─── Source tags ─── */
-.src{display:inline-block;padding:2px 7px;border-radius:6px;font-size:9px;font-weight:600;font-family:var(--sn);letter-spacing:.02em;margin-left:5px;vertical-align:middle}
-.sc{background:rgba(100,210,255,.12);color:var(--cy);border:1px solid rgba(100,210,255,.2)}
-.sf{background:rgba(191,90,242,.12);color:var(--pp);border:1px solid rgba(191,90,242,.2)}
-.sm{background:rgba(255,214,10,.1);color:var(--yw);border:1px solid rgba(255,214,10,.18)}
+.src{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:9px;font-weight:600;font-family:var(--sn);letter-spacing:.03em;margin-left:6px;vertical-align:middle;background:rgba(255,255,255,.06);color:var(--t3);border:1px solid rgba(255,255,255,.08)}
+.src::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--t4)}
+.sc::before{background:var(--cy)}
+.sf::before{background:var(--pp)}
+.sm::before{background:var(--yw)}
 
 /* ─── Status badges — Apple pill style ─── */
 .bdg{display:inline-block;padding:3px 10px;border-radius:980px;font-size:11px;font-weight:600;white-space:nowrap;letter-spacing:-.01em;font-family:var(--sn)}
@@ -107,8 +131,8 @@ h1{font-size:26px;font-weight:600;letter-spacing:-.022em;margin-top:3px;color:va
 .li{display:flex;align-items:center;gap:6px}
 
 /* ─── Company cards — Apple frosted tiles ─── */
-.cds{margin-top:32px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-.cd{background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:16px 18px;transition:all .25s cubic-bezier(.4,0,.2,1)}
+.cds{margin-top:24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:10px}
+.cd{background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:13px 15px;transition:all .25s cubic-bezier(.4,0,.2,1)}
 .cd:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.18);background:linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.03))}
 .cdh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .cdt{font-family:var(--mn);font-size:15px;font-weight:600;color:var(--t0)}
@@ -204,6 +228,13 @@ a{color:var(--bl);text-decoration:none;transition:.15s}a:hover{text-decoration:u
   .cfg-th,.cfg-tr{grid-template-columns:70px 1fr 90px 50px 60px;font-size:11px;padding:10px 10px}
   .cfg-add{flex-wrap:wrap}.cfg-add input{width:140px}.cfg-search{width:140px;margin-left:0}
 }
+@media(max-width:600px){
+  .tw{overflow-x:auto}
+  .thr,.tr{min-width:540px}
+  .hero{flex-direction:column;align-items:flex-start;gap:12px}
+  .hero-r{text-align:left}
+  .vw-tog{margin-left:0}
+}
 </style>
 </head>
 <body>
@@ -235,6 +266,7 @@ a{color:var(--bl);text-decoration:none;transition:.15s}a:hover{text-decoration:u
 <div class="cnt">
 <div class="tab-panel act" id="tabCal">
 <div id="bns"></div>
+<div id="hero"></div>
 <div class="flt" id="flt"></div>
 <div class="tw" id="tW"></div>
 <div class="lg" id="lg"></div>
@@ -387,7 +419,7 @@ const P=[
 // =======================================================================
 //  STATE
 // =======================================================================
-let ck={},cf="all",sq="",db=null,dr=null,uf=false,cmfS="idle",yhS="idle",hiddenTickers=[];
+let ck={},cf="all",sq="",db=null,dr=null,uf=false,cmfS="idle",yhS="idle",hiddenTickers=[],vw="table";
 const MO=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 const fd=d=>{if(!d)return"—";const v=new Date(d+"T12:00:00");return v.getDate()+" "+MO[v.getMonth()]+" "+v.getFullYear()};
 const dt=d=>{if(!d)return 999;const t=new Date;t.setHours(0,0,0,0);return Math.ceil((new Date(d+"T00:00:00")-t)/864e5)};
@@ -456,7 +488,15 @@ function iF(){
   if(!FB.apiKey||!FB.databaseURL){sC("local");lL();loadCustomTickers();rn();return}
   try{firebase.initializeApp(FB);db=firebase.database();dr=db.ref("earnings-tracker");uf=true;sC("connecting");
     dr.child("checks").on("value",s=>{ck=s.val()||{};sC("ok");rn()});
-    dr.child("custom-tickers").on("value",s=>{const arr=s.val()||[];arr.forEach(c=>{if(c&&!P.find(p=>p.t===c.t)){c._custom=true;P.push(c)}});rn()});
+    dr.child("custom-tickers").on("value",s=>{
+      const val=s.val()||[];
+      const arr=Array.isArray(val)?val:Object.values(val);
+      arr.forEach(c=>{
+        if(!c||typeof c!=="object"||!c.t)return;
+        if(!P.find(p=>p&&p.t===c.t)){c._custom=true;P.push(c)}
+      });
+      rn();
+    });
     dr.child("hidden-tickers").on("value",s=>{hiddenTickers=s.val()||[];rn()});
     dr.child("emailjs-config").on("value",s=>{const c=s.val();if(c){EJ.serviceId=c.serviceId||"";EJ.templateId=c.templateId||"";EJ.publicKey=c.publicKey||"";if(c.emails&&c.emails.length)ALERT_EMAILS=c.emails}});
   }catch(e){sC("local");lL();loadCustomTickers();rn()}}
@@ -490,9 +530,20 @@ function rn(){try{
   const rc=dated.filter(e=>e.rep).length,mc=dated.filter(e=>ic(e.t,e.q,"model")).length;
   const nx=dated.find(e=>!e.rep&&e.d);
 
-  document.getElementById("sA").innerHTML=`<div class="sb"><div class="sl">Reportados</div><div class="sv" style="color:var(--gn)">${rc}/${dated.length}</div></div>
-    <div class="sb"><div class="sl">Modelos</div><div class="sv" style="color:var(--pp)">${mc}/${dated.length}</div></div>
-    ${nx?`<div class="sb"><div class="sl">Próximo</div><div class="sv" style="color:var(--yw)">${nx.t} · ${nx.dy>0?nx.dy+'d':'Hoy'}</div></div>`:''}`;
+  const rpPct=dated.length?Math.round(rc/dated.length*100):0;
+  const mpPct=dated.length?Math.round(mc/dated.length*100):0;
+  document.getElementById("sA").innerHTML=`<div class="sb"><div class="ring" style="--rp:${rpPct};--rc:var(--gn)"><span>${rpPct}%</span></div><div><div class="sl">Reportados</div><div class="sv" style="color:var(--gn)">${rc}/${dated.length}</div></div></div>
+    <div class="sb"><div class="ring" style="--rp:${mpPct};--rc:var(--pp)"><span>${mpPct}%</span></div><div><div class="sl">Modelos</div><div class="sv" style="color:var(--pp)">${mc}/${dated.length}</div></div></div>`;
+
+  // Hero — próximo reporte
+  const hero=document.getElementById("hero");
+  if(hero){
+    const hnx=dated.find(e=>!e.rep&&e.dy>=0)||nx;
+    if(hnx){
+      const dd=hnx.dy,dtxt=dd>0?dd:(dd===0?"HOY":Math.abs(dd)),dlab=dd===0?"":dd===1||dd===-1?"d\u00eda":dd<0?"d\u00edas atr\u00e1s":"d\u00edas";
+      hero.innerHTML=`<div class="hero"><div class="hero-l"><div class="hero-k">Pr\u00f3ximo reporte</div><div class="hero-t">${hnx.t}<span class="hero-x">${hnx.x}</span></div><div class="hero-n">${hnx.n} \u00b7 ${hnx.q}</div></div><div class="hero-r"><div class="hero-num">${dtxt}</div><div class="hero-unit">${dlab}</div><div class="hero-date">${fd(hnx.d)}</div></div></div>`;
+    } else hero.innerHTML="";
+  }
 
   let bH="";
   const nd=P.flatMap(c=>c.q).filter(q=>!q.d).length;
@@ -503,11 +554,12 @@ function rn(){try{
     const l={all:"Todos",pending:"Pendientes",done:"Reportados"};
     return`<button class="fb ${cf===v?'a':''}" onclick="sF('${v}')">${l[v]}</button>`}).join("")+
     `<input class="si" placeholder="Buscar ticker..." value="${sq}" oninput="sS(this.value)">`+
+    `<div class="vw-tog"><button class="vwb ${vw==='table'?'a':''}" onclick="sV('table')">Tabla</button><button class="vwb ${vw==='cards'?'a':''}" onclick="sV('cards')">Tarjetas</button></div>`+
     `<button class="rb" id="rfb" onclick="rA()">↻ Actualizar</button>`;
 
-  let rw=`<div class="thr"><span>Ticker</span><span>Empresa</span><span>Quarter</span><span>Fecha</span><span>Estado</span><span style="text-align:center">Reportado</span><span style="text-align:center">Modelo</span></div>`;
-  if(!f.length)rw+=`<div class="emp">No hay eventos.</div>`;
-  else f.forEach(e=>{
+  const BUCKETS=[["over","Atrasados"],["week","Esta semana"],["month","Este mes"],["later","M\u00e1s adelante"],["rep","Reportados"],["nd","Sin fecha"]];
+  const bucketOf=e=>!e.d?"nd":e.rep?"rep":e.dy<0?"over":e.dy<=7?"week":e.dy<=30?"month":"later";
+  const rowHTML=e=>{
     const c=SC[e.st];
     const noDate=!e.d;
     const dl=noDate?"Pendiente":e.rep?"":(e.dy>0?`en ${e.dy}d`:e.dy===0?"Hoy":`hace ${Math.abs(e.dy)}d`);
@@ -516,15 +568,26 @@ function rn(){try{
     const rk=e.rep,mk=ic(e.t,e.q,"model");
     const ck1=rk?'<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7.5L5.5 10L11 4" stroke="#000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>':'';
     const ck2=mk?'<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7.5L5.5 10L11 4" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>':'';
-    rw+=`<div class="tr ${e.st==='imminent'?'imm':''}">
+    const today=!e.rep&&e.d&&e.dy===0;
+    return`<div class="tr ${e.st==='imminent'?'imm':''} ${today?'today':''}">
       <div><span class="tk">${e.t}</span><span class="ex">${e.x}</span></div>
       <div><div class="cn">${e.n}</div><div class="cs">${e.s}</div></div>
       <span class="qt">${e.q}</span>
       <div><div class="dm">${noDate?'<span style="color:var(--t4)">Sin fecha</span>':fd(e.d)}${sb}</div>${!e.rep&&dl?`<div class="ds" style="color:${dc}">${dl}</div>`:''}</div>
       <span class="bdg ${c.b}">${c.l}</span>
       <div style="text-align:center"><button class="cb ${rk?'cg':''}" onclick="tc('${e.t}','${e.q}','reported')">${ck1}</button></div>
-      <div style="text-align:center"><button class="cb ${mk?'cp':''}" onclick="tc('${e.t}','${e.q}','model')">${ck2}</button></div></div>`});
+      <div style="text-align:center"><button class="cb ${mk?'cp':''}" onclick="tc('${e.t}','${e.q}','model')">${ck2}</button></div></div>`};
+
+  let rw=`<div class="thr"><span>Ticker</span><span>Empresa</span><span>Quarter</span><span>Fecha</span><span>Estado</span><span style="text-align:center">Reportado</span><span style="text-align:center">Modelo</span></div>`;
+  if(!f.length)rw+=`<div class="emp">No hay eventos.</div>`;
+  else BUCKETS.forEach(([key,label])=>{
+    const items=f.filter(e=>bucketOf(e)===key);
+    if(!items.length)return;
+    rw+=`<div class="grp"><span>${label}</span><span class="grp-c">${items.length}</span></div>`;
+    items.forEach(e=>{rw+=rowHTML(e)});
+  });
   document.getElementById("tW").innerHTML=rw;
+  document.getElementById("tW").style.display=vw==="table"?"":"none";
 
   document.getElementById("lg").innerHTML=Object.entries(SC).map(([,v])=>`<div class="li"><span class="ld" style="background:${v.c}"></span>${v.l}</div>`).join("")+
     `<div class="li"><span class="src sc">CMF</span>Oficial CMF</div><div class="li"><span class="src sf">VER</span>Verificada</div><div class="li"><span class="src sm">EST</span>Estimada</div>`;
@@ -535,10 +598,12 @@ function rn(){try{
     const nx2=co.q.find(q=>q.d&&!q.rep&&!ic(co.t,q.q,"reported"));const pc=Math.round(dn/tl*100);
     return`<div class="cd"><div class="cdh"><span class="cdt">${co.t}</span><span class="cdp ${pc===100?'dn':''}">${pc}%</span></div>
       <div class="pb"><div class="pf" style="width:${pc}%;background:${pc===100?'var(--gn)':'#5a8ac0'}"></div></div>
-      <div class="cdd"><div>Reportados: ${dn}/${tl}</div><div>Modelos: ${md}/${tl}</div>${nx2?`<div class="cdn">Próximo: ${nx2.q} · ${fd(nx2.d)}</div>`:''}</div></div>`}).join("")
+      <div class="cdd"><div>Reportados: ${dn}/${tl}</div><div>Modelos: ${md}/${tl}</div>${nx2?`<div class="cdn">Pr\u00f3ximo: ${nx2.q} \u00b7 ${fd(nx2.d)}</div>`:''}</div></div>`}).join("");
+  document.getElementById("cds").style.display=vw==="cards"?"grid":"none";
 }catch(e){console.error("Render error:",e)}}
 
 function sF(v){cf=v;rn()}
+function sV(v){vw=v;rn()}
 function sS(v){sq=v;rn();const i=document.querySelector('.si');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}}
 async function rA(){const b=document.getElementById("rfb");b.disabled=true;b.textContent="↻ Actualizando...";await fCMF();await fYH();b.disabled=false;b.textContent="↻ Actualizar";rn()}
 
@@ -794,9 +859,9 @@ async function fetchEarningsDate(entry){
 }
 
 function saveCustomTickers(){
-  const custom=P.filter(c=>c._custom).map(c=>({t:c.t,n:c.n,s:c.s,x:c.x,cmfName:c.cmfName||"",yf:c.yf||"",q:c.q}));
-  if(uf&&dr){dr.child("custom-tickers").set(custom);dr.child("hidden-tickers").set(hiddenTickers)}
-  else{localStorage.setItem("ia-ct",JSON.stringify(custom));localStorage.setItem("ia-ht",JSON.stringify(hiddenTickers))}
+  const custom=P.filter(c=>c&&c._custom&&c.t).map(c=>({t:c.t,n:c.n||c.t,s:c.s||"Otro",x:c.x||"NYSE",cmfName:c.cmfName||"",yf:c.yf||"",q:Array.isArray(c.q)?c.q:[]}));
+  if(uf&&dr){dr.child("custom-tickers").set(custom);dr.child("hidden-tickers").set(hiddenTickers.filter(x=>x))}
+  else{localStorage.setItem("ia-ct",JSON.stringify(custom));localStorage.setItem("ia-ht",JSON.stringify(hiddenTickers.filter(x=>x)))}
 }
 
 function loadCustomTickers(){
@@ -819,7 +884,7 @@ function loadCustomTickers(){
 
 function removeTicker(t){
   if(!confirm("¿Eliminar "+t+" del portafolio?"))return;
-  const idx=P.findIndex(c=>c.t===t&&c._custom);
+  const idx=P.findIndex(c=>c&&c.t===t&&c._custom);
   if(idx>=0){P.splice(idx,1)}
   else{if(!hiddenTickers.includes(t))hiddenTickers.push(t)}
   saveCustomTickers();rn();if(activeTab==="cfg")renderCfg();
