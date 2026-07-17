@@ -456,15 +456,7 @@ function iF(){
   if(!FB.apiKey||!FB.databaseURL){sC("local");lL();loadCustomTickers();rn();return}
   try{firebase.initializeApp(FB);db=firebase.database();dr=db.ref("earnings-tracker");uf=true;sC("connecting");
     dr.child("checks").on("value",s=>{ck=s.val()||{};sC("ok");rn()});
-    dr.child("custom-tickers").on("value",s=>{
-      const val=s.val()||[];
-      const arr=Array.isArray(val)?val:Object.values(val);
-      arr.forEach(c=>{
-        if(!c||typeof c!=="object"||!c.t)return;
-        if(!P.find(p=>p&&p.t===c.t)){c._custom=true;P.push(c)}
-      });
-      rn();
-    });
+    dr.child("custom-tickers").on("value",s=>{const arr=s.val()||[];arr.forEach(c=>{if(c&&!P.find(p=>p.t===c.t)){c._custom=true;P.push(c)}});rn()});
     dr.child("hidden-tickers").on("value",s=>{hiddenTickers=s.val()||[];rn()});
     dr.child("emailjs-config").on("value",s=>{const c=s.val();if(c){EJ.serviceId=c.serviceId||"";EJ.templateId=c.templateId||"";EJ.publicKey=c.publicKey||"";if(c.emails&&c.emails.length)ALERT_EMAILS=c.emails}});
   }catch(e){sC("local");lL();loadCustomTickers();rn()}}
@@ -802,9 +794,9 @@ async function fetchEarningsDate(entry){
 }
 
 function saveCustomTickers(){
-  const custom=P.filter(c=>c&&c._custom&&c.t).map(c=>({t:c.t,n:c.n||c.t,s:c.s||"Otro",x:c.x||"NYSE",cmfName:c.cmfName||"",yf:c.yf||"",q:Array.isArray(c.q)?c.q:[]}));
-  if(uf&&dr){dr.child("custom-tickers").set(custom);dr.child("hidden-tickers").set(hiddenTickers.filter(x=>x))}
-  else{localStorage.setItem("ia-ct",JSON.stringify(custom));localStorage.setItem("ia-ht",JSON.stringify(hiddenTickers.filter(x=>x)))}
+  const custom=P.filter(c=>c._custom).map(c=>({t:c.t,n:c.n,s:c.s,x:c.x,cmfName:c.cmfName||"",yf:c.yf||"",q:c.q}));
+  if(uf&&dr){dr.child("custom-tickers").set(custom);dr.child("hidden-tickers").set(hiddenTickers)}
+  else{localStorage.setItem("ia-ct",JSON.stringify(custom));localStorage.setItem("ia-ht",JSON.stringify(hiddenTickers))}
 }
 
 function loadCustomTickers(){
@@ -827,7 +819,7 @@ function loadCustomTickers(){
 
 function removeTicker(t){
   if(!confirm("¿Eliminar "+t+" del portafolio?"))return;
-  const idx=P.findIndex(c=>c&&c.t===t&&c._custom);
+  const idx=P.findIndex(c=>c.t===t&&c._custom);
   if(idx>=0){P.splice(idx,1)}
   else{if(!hiddenTickers.includes(t))hiddenTickers.push(t)}
   saveCustomTickers();rn();if(activeTab==="cfg")renderCfg();
