@@ -347,6 +347,7 @@ const FB={apiKey:"AIzaSyCaveZCUCjaC35VMWSdAX_EgsB-605s5Zo",authDomain:"earnings-
 let EJ={serviceId:"",templateId:"",publicKey:""};
 let ALERT_EMAILS=["juanpablo@iadriana.cl","jmunoz@iadriana.cl"];
 let alertPrevDay=true;   // also warn the day before an earnings date
+let TEST_EMAIL="jmunoz@iadriana.cl";  // test emails go ONLY here, never to the full list
 
 // Finnhub API config — free key from https://finnhub.io (60 calls/min)
 let FINNHUB_KEY="";
@@ -505,7 +506,7 @@ function iF(){
       try{if(typeof applyVerifiedDates==="function"&&applyVerifiedDates(s.val()))rn()}
       catch(e){console.error("[verify] listener error:",e)}
     });
-    dr.child("emailjs-config").on("value",s=>{const c=s.val();if(c){EJ.serviceId=c.serviceId||"";EJ.templateId=c.templateId||"";EJ.publicKey=c.publicKey||"";if(c.emails&&c.emails.length)ALERT_EMAILS=c.emails;if(typeof c.alertPrev==="boolean")alertPrevDay=c.alertPrev}});
+    dr.child("emailjs-config").on("value",s=>{const c=s.val();if(c){EJ.serviceId=c.serviceId||"";EJ.templateId=c.templateId||"";EJ.publicKey=c.publicKey||"";if(c.emails&&c.emails.length)ALERT_EMAILS=c.emails;if(typeof c.alertPrev==="boolean")alertPrevDay=c.alertPrev;if(c.testEmail)TEST_EMAIL=c.testEmail}});
   }catch(e){sC("local");lL();loadCustomTickers();rn()}}
 function sC(s){const d=document.getElementById("cD"),t=document.getElementById("cT");
   if(s==="ok"){d.style.background="var(--gn)";t.textContent="Firebase conectado";t.style.color="var(--gn)"}
@@ -710,6 +711,11 @@ function renderCfg(){
           <span>El día anterior al reporte</span>
         </label>
       </div>
+      <div class="add-row" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--bd)">
+        <div class="add-fg"><label>Correo para pruebas</label><input id="tstEmail" value="${TEST_EMAIL}" placeholder="tu@correo.cl" style="width:220px" onkeydown="if(event.key==='Enter')saveTestEmail()" /></div>
+        <button class="add-btn" onclick="saveTestEmail()" style="border-color:var(--bd);background:transparent;color:var(--t2)">Guardar</button>
+      </div>
+      <p style="font-size:10px;color:var(--t4);margin-top:6px;line-height:1.5">Los correos de prueba se envían <strong style="color:var(--t3)">únicamente a esta dirección</strong>. Los destinatarios de arriba solo reciben los avisos automáticos reales.</p>
       <div class="add-row" style="margin-top:12px">
         <button class="add-btn" onclick="testAlert()" style="border-color:var(--gnd);color:var(--gn);background:transparent">Probar aviso del día</button>
         <button class="add-btn" onclick="testAlertPrev()" style="border-color:var(--ywd);color:var(--yw);background:transparent">Probar aviso previo</button>
@@ -1208,12 +1214,12 @@ function removeTicker(t){
 function loadEJConfig(){
   try{
     const raw=localStorage.getItem("ia-ej");
-    if(raw){const c=JSON.parse(raw);EJ.serviceId=c.serviceId||"";EJ.templateId=c.templateId||"";EJ.publicKey=c.publicKey||"";if(c.emails&&c.emails.length)ALERT_EMAILS=c.emails;FINNHUB_KEY=c.finnhubKey||"";if(typeof c.alertPrev==="boolean")alertPrevDay=c.alertPrev}
+    if(raw){const c=JSON.parse(raw);EJ.serviceId=c.serviceId||"";EJ.templateId=c.templateId||"";EJ.publicKey=c.publicKey||"";if(c.emails&&c.emails.length)ALERT_EMAILS=c.emails;FINNHUB_KEY=c.finnhubKey||"";if(typeof c.alertPrev==="boolean")alertPrevDay=c.alertPrev;if(c.testEmail)TEST_EMAIL=c.testEmail}
     const ap=localStorage.getItem("ia-alert-prev");if(ap!==null)alertPrevDay=ap==="1";
   }catch(e){}
 }
 function saveEJConfig(){
-  const data={...EJ,emails:ALERT_EMAILS,finnhubKey:FINNHUB_KEY,alertPrev:alertPrevDay};
+  const data={...EJ,emails:ALERT_EMAILS,finnhubKey:FINNHUB_KEY,alertPrev:alertPrevDay,testEmail:TEST_EMAIL};
   localStorage.setItem("ia-ej",JSON.stringify(data));
   if(uf&&dr)dr.child("emailjs-config").set(data);
 }
@@ -1230,41 +1236,163 @@ function removeAlertEmail(email){
   saveEJConfig();renderCfg();
 }
 
+// Next scheduled reports after a given date — gives the reader forward visibility
+function upcomingAfter(dateStr,limit){
+  const out=[];
+  const base=new Date(dateStr+"T00:00:00");
+  for(let i=1;i<=60&&out.length<limit;i++){
+    const d=new Date(base);d.setDate(d.getDate()+i);
+    const ds=d.toISOString().split("T")[0];
+    for(const e of earningsOn(ds)){
+      out.push({...e,days:i});
+      if(out.length>=limit)break;
+    }
+  }
+  return out;
+}
+
+// Season progress across every dated quarter in the portfolio
+function seasonStats(){
+  let rep=0,tot=0;
+  for(const co of P){
+    if(!co||!co.t||hiddenTickers.includes(co.t))continue;
+    for(const q of (Array.isArray(co.q)?co.q:[])){
+      if(!q||!q.d)continue;
+      tot++;
+      if(ic(co.t,q.q,"reported"))rep++;
+    }
+  }
+  return{rep,tot,pct:tot?Math.round(rep/tot*100):0};
+}
+
+const SRC_META={cmf:["CMF","#64d2ff"],finnhub:["VERIF","#30d158"],yahoo:["VERIF","#30d158"]};
+
 function buildEmailHTML(earnings,dateStr,mode){
   const isPrev=mode==="prev";
-  const accent=isPrev?"#c19a3e":"#1a1f2e";
-  const rows=earnings.map(e=>`
-    <tr>
-      <td style="padding:10px 16px;border-bottom:1px solid #e8e8e8;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:700;color:#1a1a1a;letter-spacing:0.5px">${e.t}</td>
-      <td style="padding:10px 16px;border-bottom:1px solid #e8e8e8;font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;color:#444">${e.n}</td>
-      <td style="padding:10px 16px;border-bottom:1px solid #e8e8e8;font-family:'Courier New',monospace;font-size:12px;color:#666">${e.q}</td>
-      <td style="padding:10px 16px;border-bottom:1px solid #e8e8e8;font-family:'Courier New',monospace;font-size:12px;color:#888">${e.x}</td>
-    </tr>`).join("");
+  const accent=isPrev?"#ffd60a":"#30d158";
+  const kicker=isPrev?"Aviso previo":"Reportan hoy";
+
+  const cl=earnings.filter(e=>e.x==="BCS");
+  const intl=earnings.filter(e=>e.x!=="BCS");
+
+  const row=e=>{
+    const[lbl,col]=SRC_META[e.src]||["EST","#86868b"];
+    return `<tr>
+      <td bgcolor="#1d1d1f" style="padding:13px 8px 13px 20px;border-bottom:1px solid #2d2d2f;font-family:'SF Mono',Consolas,monospace;font-size:14px;font-weight:700;color:#f5f5f7;letter-spacing:.5px;white-space:nowrap">${e.t}</td>
+      <td bgcolor="#1d1d1f" style="padding:13px 8px;border-bottom:1px solid #2d2d2f;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif">
+        <span style="font-size:14px;color:#e8e8ed;display:block;line-height:1.3">${e.n}</span>
+        <span style="font-size:11px;color:#6e6e73">${e.s||""}</span>
+      </td>
+      <td bgcolor="#1d1d1f" align="center" style="padding:13px 8px;border-bottom:1px solid #2d2d2f;font-family:'SF Mono',Consolas,monospace;font-size:12px;color:#a1a1a6;white-space:nowrap">${e.q}</td>
+      <td bgcolor="#1d1d1f" align="right" style="padding:13px 20px 13px 8px;border-bottom:1px solid #2d2d2f;white-space:nowrap">
+        <span style="font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:${col};letter-spacing:.6px">${lbl}</span>
+      </td>
+    </tr>`;
+  };
+
+  const groupHdr=t=>`<tr><td colspan="4" bgcolor="#161617" style="padding:8px 20px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:#6e6e73;letter-spacing:1.2px;text-transform:uppercase;border-bottom:1px solid #2d2d2f">${t}</td></tr>`;
+
+  let body="";
+  if(cl.length&&intl.length){
+    body=groupHdr(`Chile · ${cl.length}`)+cl.map(row).join("")+groupHdr(`Internacional · ${intl.length}`)+intl.map(row).join("");
+  } else {
+    body=earnings.map(row).join("");
+  }
+
+  // Forward look
+  const up=upcomingAfter(earnings[0]?.d||dateStr,3);
+  const upBlock=up.length?`
+    <tr><td style="padding:0 24px 22px 24px">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#161617" style="background-color:#161617;border:1px solid #2d2d2f">
+        <tr><td style="padding:14px 18px 6px 18px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:#6e6e73;letter-spacing:1.2px;text-transform:uppercase">Lo que viene</td></tr>
+        ${up.map(u=>`<tr><td style="padding:4px 18px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:13px;color:#a1a1a6">
+          <span style="font-family:'SF Mono',Consolas,monospace;font-weight:700;color:#e8e8ed">${u.t}</span>
+          <span style="color:#6e6e73"> · ${u.q} · </span>${fd(u.d)}
+          <span style="color:#6e6e73"> (en ${u.days}d)</span>
+        </td></tr>`).join("")}
+        <tr><td style="padding:6px 18px 14px 18px"></td></tr>
+      </table>
+    </td></tr>`:"";
+
+  // Season progress bar
+  const s=seasonStats();
+  const barW=Math.max(2,s.pct);
+  const progBlock=s.tot?`
+    <tr><td style="padding:0 24px 24px 24px">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#6e6e73;padding-bottom:7px">Temporada ${new Date().getFullYear()} · <span style="color:#a1a1a6"><strong style="color:#30d158">${s.rep}</strong> de ${s.tot} reportes publicados</span></td>
+          <td align="right" style="font-family:'SF Mono',Consolas,monospace;font-size:11px;color:#30d158;padding-bottom:7px">${s.pct}%</td>
+        </tr>
+        <tr><td colspan="2">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#2d2d2f" style="background-color:#2d2d2f"><tr>
+            <td width="${barW}%" bgcolor="#30d158" style="background-color:#30d158;height:3px;line-height:3px;font-size:0">&nbsp;</td>
+            <td bgcolor="#2d2d2f" style="background-color:#2d2d2f;height:3px;line-height:3px;font-size:0">&nbsp;</td>
+          </tr></table>
+        </td></tr>
+      </table>
+    </td></tr>`:"";
+
   const intro=isPrev
-    ? `<strong>Mañana ${dateStr}</strong> reporta${earnings.length>1?'n':''} <strong style="color:${accent}">${earnings.length}</strong> acción${earnings.length>1?'es':''} del portafolio:`
-    : `Hoy <strong>${dateStr}</strong> reporta${earnings.length>1?'n':''} <strong style="color:${accent}">${earnings.length}</strong> acción${earnings.length>1?'es':''} del portafolio:`;
+    ? `<strong style="color:#f5f5f7">Mañana ${dateStr}</strong> reporta${earnings.length>1?"n":""} ${earnings.length} acci${earnings.length>1?"ones":"ón"} del portafolio.`
+    : `<strong style="color:#f5f5f7">Hoy ${dateStr}</strong> reporta${earnings.length>1?"n":""} ${earnings.length} acci${earnings.length>1?"ones":"ón"} del portafolio.`;
+
   return `
-    <div style="max-width:600px;margin:0 auto;font-family:'Helvetica Neue',Arial,sans-serif">
-      <div style="background:${isPrev?'#2a2416':'#1a1f2e'};padding:24px 28px;border-radius:4px 4px 0 0">
-        <div style="font-size:10px;letter-spacing:2px;color:#7a8599;text-transform:uppercase;margin-bottom:4px">Inversiones Adriana</div>
-        <div style="font-size:20px;font-weight:700;color:#ffffff">${isPrev?"Earnings — Aviso previo":"Earnings Alert"}</div>
-      </div>
-      <div style="background:#ffffff;padding:24px 28px;border-left:1px solid #e8e8e8;border-right:1px solid #e8e8e8">
-        <p style="font-size:14px;color:#333;line-height:1.6;margin:0 0 20px 0">${intro}</p>
-        <table style="width:100%;border-collapse:collapse;border:1px solid #e8e8e8;border-radius:4px">
-          <tr style="background:#f5f7fa">
-            <th style="padding:10px 16px;text-align:left;font-family:'Helvetica Neue',Arial,sans-serif;font-size:10px;font-weight:700;color:#7a8599;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #e0e0e0">Ticker</th>
-            <th style="padding:10px 16px;text-align:left;font-family:'Helvetica Neue',Arial,sans-serif;font-size:10px;font-weight:700;color:#7a8599;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #e0e0e0">Empresa</th>
-            <th style="padding:10px 16px;text-align:left;font-family:'Helvetica Neue',Arial,sans-serif;font-size:10px;font-weight:700;color:#7a8599;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #e0e0e0">Quarter</th>
-            <th style="padding:10px 16px;text-align:left;font-family:'Helvetica Neue',Arial,sans-serif;font-size:10px;font-weight:700;color:#7a8599;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #e0e0e0">Mercado</th>
-          </tr>
-          ${rows}
-        </table>
-      </div>
-      <div style="background:#f5f7fa;padding:16px 28px;border:1px solid #e8e8e8;border-top:0;border-radius:0 0 4px 4px">
-        <p style="font-size:11px;color:#999;margin:0;font-family:'Helvetica Neue',Arial,sans-serif">Earnings Calendar — Inversiones Adriana · ${isPrev?"Aviso enviado el día previo al reporte.":"Aviso enviado el día del reporte."}</p>
-      </div>
-    </div>`;
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0a0a0b" style="background-color:#0a0a0b;padding:28px 12px">
+<tr><td align="center">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;border:1px solid #2d2d2f">
+
+  <!-- Header -->
+  <tr><td bgcolor="#000000" style="background-color:#000000;padding:0">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td width="3" bgcolor="${accent}" style="background-color:${accent};width:3px;font-size:0;line-height:0">&nbsp;</td>
+      <td style="padding:26px 24px">
+        <div style="font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:9px;letter-spacing:2.2px;color:#6e6e73;text-transform:uppercase;margin-bottom:7px">Inversiones Adriana</div>
+        <div style="font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:23px;font-weight:600;color:#ffffff;letter-spacing:-.4px;line-height:1.2">Earnings Calendar</div>
+        <div style="font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:12px;color:${accent};margin-top:5px;font-weight:600;letter-spacing:.3px">${kicker}</div>
+      </td>
+    </tr></table>
+  </td></tr>
+
+  <!-- Intro -->
+  <tr><td bgcolor="#121213" style="background-color:#121213;padding:22px 24px 18px 24px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:14px;color:#a1a1a6;line-height:1.55">${intro}</td></tr>
+
+  <!-- Table -->
+  <tr><td bgcolor="#121213" style="background-color:#121213;padding:0 24px 22px 24px">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #2d2d2f;border-collapse:collapse">
+      <tr>
+        <th align="left" bgcolor="#161617" style="padding:9px 8px 9px 20px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:#6e6e73;letter-spacing:1.1px;text-transform:uppercase;border-bottom:1px solid #38383a">Ticker</th>
+        <th align="left" bgcolor="#161617" style="padding:9px 8px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:#6e6e73;letter-spacing:1.1px;text-transform:uppercase;border-bottom:1px solid #38383a">Empresa</th>
+        <th align="center" bgcolor="#161617" style="padding:9px 8px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:#6e6e73;letter-spacing:1.1px;text-transform:uppercase;border-bottom:1px solid #38383a">Quarter</th>
+        <th align="right" bgcolor="#161617" style="padding:9px 20px 9px 8px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:#6e6e73;letter-spacing:1.1px;text-transform:uppercase;border-bottom:1px solid #38383a">Fuente</th>
+      </tr>
+      ${body}
+    </table>
+  </td></tr>
+
+  ${upBlock.replace(/<tr><td /,'<tr><td bgcolor="#121213" ')}
+  ${progBlock.replace(/<tr><td /,'<tr><td bgcolor="#121213" ')}
+
+  <!-- CTA -->
+  <tr><td bgcolor="#121213" style="background-color:#121213;padding:0 24px 26px 24px">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td bgcolor="#2997ff" style="background-color:#2997ff;padding:11px 22px">
+        <a href="https://joaquinmunoz777.github.io/earnings-calendar/" style="font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:13px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:-.1px">Ver calendario completo →</a>
+      </td>
+    </tr></table>
+  </td></tr>
+
+  <!-- Footer -->
+  <tr><td bgcolor="#000000" style="background-color:#000000;padding:16px 24px;border-top:1px solid #2d2d2f">
+    <div style="font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:10px;color:#48484a;line-height:1.6">
+      Earnings Calendar · Inversiones Adriana<br/>
+      ${isPrev?"Aviso automático enviado el día previo al reporte.":"Aviso automático enviado el día del reporte."}
+      Fuentes: CMF (oficial Chile) · VERIF (confirmada por proveedor) · EST (estimada).
+    </div>
+  </td></tr>
+
+</table>
+</td></tr></table>`;
 }
 
 async function sendEmailJS(toEmail,subject,htmlBody){
@@ -1281,7 +1409,7 @@ async function sendEmailJS(toEmail,subject,htmlBody){
         subject:subject,
         message:htmlBody,
         name:"iA Earnings Calendar",
-        email:ALERT_EMAILS[0]||toEmail
+        email:TEST_EMAIL||toEmail
       }
     })
   });
@@ -1292,7 +1420,7 @@ async function sendEmailJS(toEmail,subject,htmlBody){
 // Collects earnings scheduled for a given date, skipping ones already marked reported
 function earningsOn(dateStr){
   return P.filter(co=>co&&co.t&&!hiddenTickers.includes(co.t))
-    .flatMap(co=>(Array.isArray(co.q)?co.q:[]).map(q=>({t:co.t,n:co.n,s:co.s,x:co.x,q:q.q,d:q.d})))
+    .flatMap(co=>(Array.isArray(co.q)?co.q:[]).map(q=>({t:co.t,n:co.n,s:co.s,x:co.x,q:q.q,d:q.d,src:q._s||"manual"})))
     .filter(e=>e.d===dateStr&&!ic(e.t,e.q,"reported"));
 }
 
@@ -1336,25 +1464,60 @@ async function checkAndSendAlerts(){
   }
 }
 
+// Test emails pull the REAL data for the matching date, so what you preview is
+// exactly what would be sent. Falls back to obviously-fake demo rows if nothing
+// is scheduled, and says so.
 function testAlert(){
   if(!EJ.serviceId||!EJ.templateId||!EJ.publicKey){alert("Configurá las credenciales de EmailJS primero.");return}
-  if(!ALERT_EMAILS.length){alert("Agregá al menos un destinatario.");return}
-  const sample=[{t:"NVDA",n:"NVIDIA Corp.",q:"Q1 26",x:"NASDAQ"},{t:"UNH",n:"UnitedHealth Group",q:"Q1 26",x:"NYSE"}];
-  const html=buildEmailHTML(sample,fd(new Date().toISOString().split("T")[0]),"day");
-  sendEmailJS(ALERT_EMAILS[0],"iA Earnings Alert — Prueba",html)
-    .then(()=>alert("✓ Email de prueba enviado a "+ALERT_EMAILS[0]))
+  if(!TEST_EMAIL){alert("Definí primero el correo para pruebas.");return}
+  const ds=new Date().toISOString().split("T")[0];
+  let list=earningsOn(ds),demo=false;
+  if(!list.length){
+    demo=true;
+    list=[{t:"DEMO",n:"Ticker de ejemplo",s:"—",q:"Q0 00",x:"NYSE",src:"manual",d:ds}];
+  }
+  const html=buildEmailHTML(list,fd(ds),"day");
+  const subj=demo
+    ? "iA Earnings — Prueba (sin reportes hoy)"
+    : `iA Earnings — PRUEBA · ${list.map(e=>e.t).join(", ")} reporta${list.length>1?"n":""} hoy`;
+  sendEmailJS(TEST_EMAIL,subj,html)
+    .then(()=>alert(demo
+      ? "✓ Prueba enviada SOLO a "+TEST_EMAIL+"\n\nHoy no hay reportes agendados, así que el correo usa una fila de ejemplo."
+      : "✓ Prueba enviada SOLO a "+TEST_EMAIL+"\n\nCon los datos reales de hoy: "+list.map(e=>e.t).join(", ")))
     .catch(e=>alert("✗ Error: "+e.message));
 }
 
 function testAlertPrev(){
   if(!EJ.serviceId||!EJ.templateId||!EJ.publicKey){alert("Configurá las credenciales de EmailJS primero.");return}
-  if(!ALERT_EMAILS.length){alert("Agregá al menos un destinatario.");return}
-  const tm=new Date();tm.setDate(tm.getDate()+1);
-  const sample=[{t:"BABA",n:"Alibaba (ADR)",q:"Q1 FY27",x:"NYSE"}];
-  const html=buildEmailHTML(sample,fd(tm.toISOString().split("T")[0]),"prev");
-  sendEmailJS(ALERT_EMAILS[0],"iA Earnings — Prueba aviso previo",html)
-    .then(()=>alert("✓ Email de prueba (aviso previo) enviado a "+ALERT_EMAILS[0]))
+  if(!TEST_EMAIL){alert("Definí primero el correo para pruebas.");return}
+  const t=new Date();t.setDate(t.getDate()+1);
+  const ds=t.toISOString().split("T")[0];
+  let list=earningsOn(ds),demo=false;
+  if(!list.length){
+    demo=true;
+    list=[{t:"DEMO",n:"Ticker de ejemplo",s:"—",q:"Q0 00",x:"NYSE",src:"manual",d:ds}];
+  }
+  const html=buildEmailHTML(list,fd(ds),"prev");
+  const subj=demo
+    ? "iA Earnings — Prueba aviso previo (sin reportes mañana)"
+    : `iA Earnings — PRUEBA · ${list.map(e=>e.t).join(", ")} reporta${list.length>1?"n":""} mañana`;
+  sendEmailJS(TEST_EMAIL,subj,html)
+    .then(()=>alert(demo
+      ? "✓ Prueba enviada SOLO a "+TEST_EMAIL+"\n\nMañana no hay reportes agendados, así que el correo usa una fila de ejemplo."
+      : "✓ Prueba enviada SOLO a "+TEST_EMAIL+"\n\nCon los datos reales de mañana: "+list.map(e=>e.t).join(", ")))
     .catch(e=>alert("✗ Error: "+e.message));
+}
+
+function saveTestEmail(){
+  const v=(document.getElementById("tstEmail")?.value||"").trim();
+  const st=document.getElementById("alSt");
+  if(!v||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){
+    if(st){st.textContent="Correo inválido.";st.className="add-st err"}
+    return;
+  }
+  TEST_EMAIL=v;
+  saveEJConfig();
+  if(st){st.textContent="✓ Las pruebas se enviarán solo a "+TEST_EMAIL;st.className="add-st ok"}
 }
 
 function toggleAlertPrev(){
