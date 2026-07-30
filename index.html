@@ -348,6 +348,8 @@ let EJ={serviceId:"",templateId:"",publicKey:""};
 let ALERT_EMAILS=["juanpablo@iadriana.cl","jmunoz@iadriana.cl"];
 let alertPrevDay=true;   // also warn the day before an earnings date
 let TEST_EMAIL="jmunoz@iadriana.cl";  // test emails go ONLY here, never to the full list
+let alertsEnabled=false;  // master switch. Starts OFF on purpose: no real alert reaches
+                          // the recipient list until it is turned on deliberately.
 
 // Finnhub API config — free key from https://finnhub.io (60 calls/min)
 let FINNHUB_KEY="";
@@ -506,7 +508,7 @@ function iF(){
       try{if(typeof applyVerifiedDates==="function"&&applyVerifiedDates(s.val()))rn()}
       catch(e){console.error("[verify] listener error:",e)}
     });
-    dr.child("emailjs-config").on("value",s=>{const c=s.val();if(c){EJ.serviceId=c.serviceId||"";EJ.templateId=c.templateId||"";EJ.publicKey=c.publicKey||"";if(c.emails&&c.emails.length)ALERT_EMAILS=c.emails;if(typeof c.alertPrev==="boolean")alertPrevDay=c.alertPrev;if(c.testEmail)TEST_EMAIL=c.testEmail}});
+    dr.child("emailjs-config").on("value",s=>{const c=s.val();if(c){EJ.serviceId=c.serviceId||"";EJ.templateId=c.templateId||"";EJ.publicKey=c.publicKey||"";if(c.emails&&c.emails.length)ALERT_EMAILS=c.emails;if(typeof c.alertPrev==="boolean")alertPrevDay=c.alertPrev;if(c.testEmail)TEST_EMAIL=c.testEmail;if(typeof c.alertsOn==="boolean")alertsEnabled=c.alertsOn}});
   }catch(e){sC("local");lL();loadCustomTickers();rn()}}
 function sC(s){const d=document.getElementById("cD"),t=document.getElementById("cT");
   if(s==="ok"){d.style.background="var(--gn)";t.textContent="Firebase conectado";t.style.color="var(--gn)"}
@@ -699,6 +701,16 @@ function renderCfg(){
         <div class="add-fg"><label>Agregar correo</label><input id="newEmail" placeholder="correo@ejemplo.cl" style="width:220px" onkeydown="if(event.key==='Enter')addAlertEmail()" /></div>
         <button class="add-btn" onclick="addAlertEmail()">+ Agregar</button>
       </div>
+    </div>
+    <div class="add-form" style="margin-top:10px;border-color:${alertsEnabled?"var(--gnd)":"var(--ywd)"}">
+      <h3 style="color:${alertsEnabled?"var(--gn)":"var(--yw)"}">${alertsEnabled?"AVISOS AUTOMÁTICOS ACTIVOS":"AVISOS AUTOMÁTICOS PAUSADOS"}</h3>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t1);cursor:pointer">
+        <input type="checkbox" id="alOn" onchange="toggleAlertsEnabled()" ${alertsEnabled?"checked":""} style="width:auto;cursor:pointer" />
+        <span>Enviar avisos automáticos a los destinatarios</span>
+      </label>
+      <p style="font-size:11px;color:var(--t3);margin-top:8px;line-height:1.5">${alertsEnabled
+        ? `Los avisos se envían a <strong style="color:var(--t2)">${ALERT_EMAILS.length} destinatario${ALERT_EMAILS.length>1?"s":""}</strong>. Cada aviso se manda una sola vez, sin importar cuántas personas abran la página.`
+        : `Nadie de la lista recibe nada mientras esté pausado. Los botones de prueba siguen funcionando y van solo a tu correo. Activá esto cuando estés listo.`}</p>
     </div>
     <div class="add-form" style="margin-top:10px"><h3>CUÁNDO AVISAR</h3>
       <div style="display:flex;flex-direction:column;gap:8px">
@@ -1214,12 +1226,13 @@ function removeTicker(t){
 function loadEJConfig(){
   try{
     const raw=localStorage.getItem("ia-ej");
-    if(raw){const c=JSON.parse(raw);EJ.serviceId=c.serviceId||"";EJ.templateId=c.templateId||"";EJ.publicKey=c.publicKey||"";if(c.emails&&c.emails.length)ALERT_EMAILS=c.emails;FINNHUB_KEY=c.finnhubKey||"";if(typeof c.alertPrev==="boolean")alertPrevDay=c.alertPrev;if(c.testEmail)TEST_EMAIL=c.testEmail}
+    if(raw){const c=JSON.parse(raw);EJ.serviceId=c.serviceId||"";EJ.templateId=c.templateId||"";EJ.publicKey=c.publicKey||"";if(c.emails&&c.emails.length)ALERT_EMAILS=c.emails;FINNHUB_KEY=c.finnhubKey||"";if(typeof c.alertPrev==="boolean")alertPrevDay=c.alertPrev;if(c.testEmail)TEST_EMAIL=c.testEmail;if(typeof c.alertsOn==="boolean")alertsEnabled=c.alertsOn}
+    const ae=localStorage.getItem("ia-alerts-on");if(ae!==null)alertsEnabled=ae==="1";
     const ap=localStorage.getItem("ia-alert-prev");if(ap!==null)alertPrevDay=ap==="1";
   }catch(e){}
 }
 function saveEJConfig(){
-  const data={...EJ,emails:ALERT_EMAILS,finnhubKey:FINNHUB_KEY,alertPrev:alertPrevDay,testEmail:TEST_EMAIL};
+  const data={...EJ,emails:ALERT_EMAILS,finnhubKey:FINNHUB_KEY,alertPrev:alertPrevDay,testEmail:TEST_EMAIL,alertsOn:alertsEnabled};
   localStorage.setItem("ia-ej",JSON.stringify(data));
   if(uf&&dr)dr.child("emailjs-config").set(data);
 }
@@ -1265,129 +1278,145 @@ function seasonStats(){
   return{rep,tot,pct:tot?Math.round(rep/tot*100):0};
 }
 
-const SRC_META={cmf:["CMF","#64d2ff"],finnhub:["VERIF","#30d158"],yahoo:["VERIF","#30d158"]};
+// Palette note: this email is deliberately LIGHT-first. Outlook/Gmail dark modes are
+// built to invert light emails cleanly, but they mangle mid-dark backgrounds (lifting
+// #121213 to muddy grey). Whites invert to near-black, dark text inverts to light, and
+// saturated accents survive. The only intentionally dark element is the header, since
+// already-dark backgrounds are left alone by every client.
+const SRC_META={
+  cmf:["CMF","#0b6285","#e7f3fa"],
+  finnhub:["VERIF","#067647","#e7f6ec"],
+  yahoo:["VERIF","#067647","#e7f6ec"]
+};
 
 function buildEmailHTML(earnings,dateStr,mode){
   const isPrev=mode==="prev";
-  const accent=isPrev?"#ffd60a":"#30d158";
-  const kicker=isPrev?"Aviso previo":"Reportan hoy";
+  const accent=isPrev?"#b8860b":"#067647";
+  const kicker=isPrev?"Aviso previo · reportan mañana":"Reportan hoy";
 
   const cl=earnings.filter(e=>e.x==="BCS");
   const intl=earnings.filter(e=>e.x!=="BCS");
 
-  const row=e=>{
-    const[lbl,col]=SRC_META[e.src]||["EST","#86868b"];
+  const row=(e,last)=>{
+    const[lbl,fg,bg]=SRC_META[e.src]||["EST","#6e6e73","#f2f2f4"];
+    const bb=last?"":"border-bottom:1px solid #ececee;";
     return `<tr>
-      <td bgcolor="#1d1d1f" style="padding:13px 8px 13px 20px;border-bottom:1px solid #2d2d2f;font-family:'SF Mono',Consolas,monospace;font-size:14px;font-weight:700;color:#f5f5f7;letter-spacing:.5px;white-space:nowrap">${e.t}</td>
-      <td bgcolor="#1d1d1f" style="padding:13px 8px;border-bottom:1px solid #2d2d2f;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif">
-        <span style="font-size:14px;color:#e8e8ed;display:block;line-height:1.3">${e.n}</span>
-        <span style="font-size:11px;color:#6e6e73">${e.s||""}</span>
+      <td bgcolor="#ffffff" style="background-color:#ffffff;padding:14px 10px 14px 18px;${bb}font-family:'SF Mono',Consolas,'Courier New',monospace;font-size:14px;font-weight:700;color:#1d1d1f;letter-spacing:.3px;white-space:nowrap;vertical-align:middle">${e.t}</td>
+      <td bgcolor="#ffffff" style="background-color:#ffffff;padding:14px 10px;${bb}font-family:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;vertical-align:middle">
+        <span style="font-size:14px;color:#1d1d1f;display:block;line-height:1.35;font-weight:500">${e.n}</span>
+        ${e.s?`<span style="font-size:11px;color:#8e8e93;display:block;margin-top:1px">${e.s}</span>`:""}
       </td>
-      <td bgcolor="#1d1d1f" align="center" style="padding:13px 8px;border-bottom:1px solid #2d2d2f;font-family:'SF Mono',Consolas,monospace;font-size:12px;color:#a1a1a6;white-space:nowrap">${e.q}</td>
-      <td bgcolor="#1d1d1f" align="right" style="padding:13px 20px 13px 8px;border-bottom:1px solid #2d2d2f;white-space:nowrap">
-        <span style="font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:${col};letter-spacing:.6px">${lbl}</span>
+      <td bgcolor="#ffffff" align="center" style="background-color:#ffffff;padding:14px 10px;${bb}font-family:'SF Mono',Consolas,'Courier New',monospace;font-size:12px;color:#6e6e73;white-space:nowrap;vertical-align:middle">${e.q}</td>
+      <td bgcolor="#ffffff" align="right" style="background-color:#ffffff;padding:14px 18px 14px 10px;${bb}white-space:nowrap;vertical-align:middle">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="right"><tr>
+          <td bgcolor="${bg}" style="background-color:${bg};padding:3px 8px;font-family:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:${fg};letter-spacing:.7px">${lbl}</td>
+        </tr></table>
       </td>
     </tr>`;
   };
 
-  const groupHdr=t=>`<tr><td colspan="4" bgcolor="#161617" style="padding:8px 20px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:#6e6e73;letter-spacing:1.2px;text-transform:uppercase;border-bottom:1px solid #2d2d2f">${t}</td></tr>`;
+  const groupHdr=t=>`<tr><td colspan="4" bgcolor="#fbfbfc" style="background-color:#fbfbfc;padding:7px 18px;font-family:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:#8e8e93;letter-spacing:1.1px;text-transform:uppercase;border-bottom:1px solid #ececee;border-top:1px solid #ececee">${t}</td></tr>`;
 
   let body="";
   if(cl.length&&intl.length){
-    body=groupHdr(`Chile · ${cl.length}`)+cl.map(row).join("")+groupHdr(`Internacional · ${intl.length}`)+intl.map(row).join("");
+    body=groupHdr(`Chile · ${cl.length}`)+cl.map((e,i)=>row(e,false)).join("")
+        +groupHdr(`Internacional · ${intl.length}`)+intl.map((e,i)=>row(e,i===intl.length-1)).join("");
   } else {
-    body=earnings.map(row).join("");
+    body=earnings.map((e,i)=>row(e,i===earnings.length-1)).join("");
   }
 
   // Forward look
   const up=upcomingAfter(earnings[0]?.d||dateStr,3);
   const upBlock=up.length?`
-    <tr><td style="padding:0 24px 22px 24px">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#161617" style="background-color:#161617;border:1px solid #2d2d2f">
-        <tr><td style="padding:14px 18px 6px 18px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:#6e6e73;letter-spacing:1.2px;text-transform:uppercase">Lo que viene</td></tr>
-        ${up.map(u=>`<tr><td style="padding:4px 18px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:13px;color:#a1a1a6">
-          <span style="font-family:'SF Mono',Consolas,monospace;font-weight:700;color:#e8e8ed">${u.t}</span>
-          <span style="color:#6e6e73"> · ${u.q} · </span>${fd(u.d)}
-          <span style="color:#6e6e73"> (en ${u.days}d)</span>
-        </td></tr>`).join("")}
-        <tr><td style="padding:6px 18px 14px 18px"></td></tr>
+    <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:0 22px 20px 22px">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#fbfbfc" style="background-color:#fbfbfc;border:1px solid #ececee">
+        <tr><td colspan="2" style="padding:13px 16px 8px 16px;font-family:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:#8e8e93;letter-spacing:1.1px;text-transform:uppercase">Lo que viene</td></tr>
+        ${up.map(u=>`<tr>
+          <td style="padding:3px 6px 3px 16px;font-family:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:13px;color:#3a3a3c;line-height:1.5">
+            <span style="font-family:'SF Mono',Consolas,'Courier New',monospace;font-weight:700;color:#1d1d1f">${u.t}</span><span style="color:#8e8e93"> · ${u.q}</span>
+          </td>
+          <td align="right" style="padding:3px 16px 3px 6px;font-family:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6e6e73;white-space:nowrap">${fd(u.d)} <span style="color:#a1a1a6">· ${u.days}d</span></td>
+        </tr>`).join("")}
+        <tr><td colspan="2" style="padding:0 16px 13px 16px;font-size:0;line-height:0">&nbsp;</td></tr>
       </table>
     </td></tr>`:"";
 
-  // Season progress bar
+  // Season progress
   const s=seasonStats();
-  const barW=Math.max(2,s.pct);
+  const barW=Math.max(2,Math.min(100,s.pct));
   const progBlock=s.tot?`
-    <tr><td style="padding:0 24px 24px 24px">
+    <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:0 22px 22px 22px">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td style="font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#6e6e73;padding-bottom:7px">Temporada ${new Date().getFullYear()} · <span style="color:#a1a1a6"><strong style="color:#30d158">${s.rep}</strong> de ${s.tot} reportes publicados</span></td>
-          <td align="right" style="font-family:'SF Mono',Consolas,monospace;font-size:11px;color:#30d158;padding-bottom:7px">${s.pct}%</td>
+          <td style="font-family:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:11px;color:#8e8e93;padding-bottom:6px">Temporada ${new Date().getFullYear()} · <strong style="color:#067647">${s.rep}</strong><span style="color:#6e6e73"> de ${s.tot} reportes publicados</span></td>
+          <td align="right" style="font-family:'SF Mono',Consolas,'Courier New',monospace;font-size:11px;font-weight:700;color:#067647;padding-bottom:6px">${s.pct}%</td>
         </tr>
         <tr><td colspan="2">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#2d2d2f" style="background-color:#2d2d2f"><tr>
-            <td width="${barW}%" bgcolor="#30d158" style="background-color:#30d158;height:3px;line-height:3px;font-size:0">&nbsp;</td>
-            <td bgcolor="#2d2d2f" style="background-color:#2d2d2f;height:3px;line-height:3px;font-size:0">&nbsp;</td>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#e3e3e6" style="background-color:#e3e3e6"><tr>
+            <td width="${barW}%" bgcolor="#067647" style="background-color:#067647;height:4px;line-height:4px;font-size:0">&nbsp;</td>
+            <td bgcolor="#e3e3e6" style="background-color:#e3e3e6;height:4px;line-height:4px;font-size:0">&nbsp;</td>
           </tr></table>
         </td></tr>
       </table>
     </td></tr>`:"";
 
-  const intro=isPrev
-    ? `<strong style="color:#f5f5f7">Mañana ${dateStr}</strong> reporta${earnings.length>1?"n":""} ${earnings.length} acci${earnings.length>1?"ones":"ón"} del portafolio.`
-    : `<strong style="color:#f5f5f7">Hoy ${dateStr}</strong> reporta${earnings.length>1?"n":""} ${earnings.length} acci${earnings.length>1?"ones":"ón"} del portafolio.`;
+  const when=isPrev?`Mañana ${dateStr}`:`Hoy ${dateStr}`;
+  const n=earnings.length;
 
   return `
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0a0a0b" style="background-color:#0a0a0b;padding:28px 12px">
-<tr><td align="center">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;border:1px solid #2d2d2f">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f5f5f7" style="background-color:#f5f5f7">
+<tr><td align="center" style="padding:26px 12px">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;border:1px solid #e3e3e6">
 
-  <!-- Header -->
-  <tr><td bgcolor="#000000" style="background-color:#000000;padding:0">
+  <!-- Header (intentionally dark: dark backgrounds are left untouched by dark-mode clients) -->
+  <tr><td bgcolor="#16181d" style="background-color:#16181d;padding:0">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td width="3" bgcolor="${accent}" style="background-color:${accent};width:3px;font-size:0;line-height:0">&nbsp;</td>
-      <td style="padding:26px 24px">
-        <div style="font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:9px;letter-spacing:2.2px;color:#6e6e73;text-transform:uppercase;margin-bottom:7px">Inversiones Adriana</div>
-        <div style="font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:23px;font-weight:600;color:#ffffff;letter-spacing:-.4px;line-height:1.2">Earnings Calendar</div>
-        <div style="font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:12px;color:${accent};margin-top:5px;font-weight:600;letter-spacing:.3px">${kicker}</div>
+      <td width="4" bgcolor="${accent}" style="background-color:${accent};width:4px;font-size:0;line-height:0">&nbsp;</td>
+      <td style="padding:24px 22px">
+        <div style="font-family:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:9px;letter-spacing:2.4px;color:#8e8e93;text-transform:uppercase;margin-bottom:8px">Inversiones Adriana</div>
+        <div style="font-family:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:24px;font-weight:600;color:#ffffff;letter-spacing:-.5px;line-height:1.15">Earnings Calendar</div>
+        <div style="font-family:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#d0d0d4;margin-top:7px;letter-spacing:.2px">${kicker}</div>
       </td>
     </tr></table>
   </td></tr>
 
-  <!-- Intro -->
-  <tr><td bgcolor="#121213" style="background-color:#121213;padding:22px 24px 18px 24px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:14px;color:#a1a1a6;line-height:1.55">${intro}</td></tr>
+  <!-- Summary -->
+  <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:24px 22px 16px 22px">
+    <div style="font-family:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:15px;color:#1d1d1f;line-height:1.5;font-weight:500">${when}</div>
+    <div style="font-family:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:14px;color:#6e6e73;line-height:1.5;margin-top:3px">${n} acci${n>1?"ones":"ón"} del portafolio ${n>1?"reportan":"reporta"} resultados.</div>
+  </td></tr>
 
   <!-- Table -->
-  <tr><td bgcolor="#121213" style="background-color:#121213;padding:0 24px 22px 24px">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #2d2d2f;border-collapse:collapse">
+  <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:0 22px 20px 22px">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e3e3e6;border-collapse:collapse">
       <tr>
-        <th align="left" bgcolor="#161617" style="padding:9px 8px 9px 20px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:#6e6e73;letter-spacing:1.1px;text-transform:uppercase;border-bottom:1px solid #38383a">Ticker</th>
-        <th align="left" bgcolor="#161617" style="padding:9px 8px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:#6e6e73;letter-spacing:1.1px;text-transform:uppercase;border-bottom:1px solid #38383a">Empresa</th>
-        <th align="center" bgcolor="#161617" style="padding:9px 8px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:#6e6e73;letter-spacing:1.1px;text-transform:uppercase;border-bottom:1px solid #38383a">Quarter</th>
-        <th align="right" bgcolor="#161617" style="padding:9px 20px 9px 8px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:#6e6e73;letter-spacing:1.1px;text-transform:uppercase;border-bottom:1px solid #38383a">Fuente</th>
+        <th align="left" bgcolor="#fbfbfc" style="background-color:#fbfbfc;padding:9px 10px 9px 18px;font-family:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:#8e8e93;letter-spacing:1.1px;text-transform:uppercase;border-bottom:1px solid #e3e3e6">Ticker</th>
+        <th align="left" bgcolor="#fbfbfc" style="background-color:#fbfbfc;padding:9px 10px;font-family:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:#8e8e93;letter-spacing:1.1px;text-transform:uppercase;border-bottom:1px solid #e3e3e6">Empresa</th>
+        <th align="center" bgcolor="#fbfbfc" style="background-color:#fbfbfc;padding:9px 10px;font-family:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:#8e8e93;letter-spacing:1.1px;text-transform:uppercase;border-bottom:1px solid #e3e3e6">Quarter</th>
+        <th align="right" bgcolor="#fbfbfc" style="background-color:#fbfbfc;padding:9px 18px 9px 10px;font-family:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:700;color:#8e8e93;letter-spacing:1.1px;text-transform:uppercase;border-bottom:1px solid #e3e3e6">Fuente</th>
       </tr>
       ${body}
     </table>
   </td></tr>
 
-  ${upBlock.replace(/<tr><td /,'<tr><td bgcolor="#121213" ')}
-  ${progBlock.replace(/<tr><td /,'<tr><td bgcolor="#121213" ')}
+  ${upBlock}
+  ${progBlock}
 
   <!-- CTA -->
-  <tr><td bgcolor="#121213" style="background-color:#121213;padding:0 24px 26px 24px">
+  <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:0 22px 26px 22px">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td bgcolor="#2997ff" style="background-color:#2997ff;padding:11px 22px">
-        <a href="https://joaquinmunoz777.github.io/earnings-calendar/" style="font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:13px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:-.1px">Ver calendario completo →</a>
+      <td bgcolor="#0071e3" style="background-color:#0071e3;padding:12px 24px">
+        <a href="https://joaquinmunoz777.github.io/earnings-calendar/" style="font-family:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:13px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:-.1px">Ver calendario completo →</a>
       </td>
     </tr></table>
   </td></tr>
 
   <!-- Footer -->
-  <tr><td bgcolor="#000000" style="background-color:#000000;padding:16px 24px;border-top:1px solid #2d2d2f">
-    <div style="font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:10px;color:#48484a;line-height:1.6">
-      Earnings Calendar · Inversiones Adriana<br/>
-      ${isPrev?"Aviso automático enviado el día previo al reporte.":"Aviso automático enviado el día del reporte."}
-      Fuentes: CMF (oficial Chile) · VERIF (confirmada por proveedor) · EST (estimada).
+  <tr><td bgcolor="#fbfbfc" style="background-color:#fbfbfc;padding:16px 22px;border-top:1px solid #e3e3e6">
+    <div style="font-family:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:10px;color:#8e8e93;line-height:1.7">
+      <strong style="color:#6e6e73">Earnings Calendar · Inversiones Adriana</strong><br/>
+      ${isPrev?"Aviso automático del día previo al reporte.":"Aviso automático del día del reporte."}<br/>
+      Fuente de la fecha — <strong style="color:#0b6285">CMF</strong> oficial Chile · <strong style="color:#067647">VERIF</strong> confirmada por proveedor · <strong style="color:#6e6e73">EST</strong> estimada.
     </div>
   </td></tr>
 
@@ -1435,32 +1464,69 @@ async function sendAlertBatch(list,dateStr,mode){
   console.log(`[alert] ${mode} enviado a ${ALERT_EMAILS.length} destinatarios:`,tks);
 }
 
+// Claims the right to send one specific alert, ATOMICALLY and SHARED across devices.
+// The old localStorage approach was per-browser: when a second person opened the page,
+// their browser had no record and re-sent everything. A Firebase transaction means only
+// the first caller anywhere wins; everyone else is told the slot is taken.
+async function claimAlertSlot(key,meta){
+  if(uf&&dr){
+    try{
+      const res=await dr.child("sent-alerts").child(key).transaction(cur=>{
+        if(cur)return;               // returning undefined aborts → committed:false
+        return{at:new Date().toISOString(),...meta};
+      });
+      return !!res.committed;
+    }catch(e){
+      console.error("[alert] claim falló, no se envía por seguridad:",e);
+      return false;                  // fail closed: never risk a duplicate
+    }
+  }
+  // Offline fallback (no Firebase): per-device dedup is the best we can do
+  try{
+    const k="ia-"+key;
+    if(localStorage.getItem(k))return false;
+    localStorage.setItem(k,"1");
+    return true;
+  }catch(e){return false}
+}
+
+// If the send itself fails, release the slot so the alert can retry later
+async function releaseAlertSlot(key){
+  try{
+    if(uf&&dr)await dr.child("sent-alerts").child(key).remove();
+    else localStorage.removeItem("ia-"+key);
+  }catch(e){console.error("[alert] release falló:",e)}
+}
+
 async function checkAndSendAlerts(){
+  if(!alertsEnabled){console.log("[alert] avisos automáticos PAUSADOS — no se envía nada");return}
   if(!EJ.serviceId||!EJ.templateId||!EJ.publicKey)return;
   if(!ALERT_EMAILS.length)return;
   const t=new Date();t.setHours(0,0,0,0);
-  const todayStr=t.toISOString().split("T")[0];
+  const todayStr=new Date(t.getTime()-t.getTimezoneOffset()*60000).toISOString().split("T")[0];
   const tm=new Date(t);tm.setDate(tm.getDate()+1);
-  const tmStr=tm.toISOString().split("T")[0];
+  const tmStr=new Date(tm.getTime()-tm.getTimezoneOffset()*60000).toISOString().split("T")[0];
 
   // Day-of alert
-  try{
-    const k="ia-alert-"+todayStr;
-    if(!localStorage.getItem(k)){
-      const list=earningsOn(todayStr);
-      if(list.length){await sendAlertBatch(list,todayStr,"day");localStorage.setItem(k,"1")}
-    }
-  }catch(e){console.error("[alert] day-of falló:",e)}
+  const dl=earningsOn(todayStr);
+  if(dl.length){
+    const key="day-"+todayStr;
+    if(await claimAlertSlot(key,{mode:"day",date:todayStr,tickers:dl.map(e=>e.t)})){
+      try{await sendAlertBatch(dl,todayStr,"day")}
+      catch(e){console.error("[alert] envío día-de falló:",e);await releaseAlertSlot(key)}
+    } else console.log("[alert] día-de ya enviado por otro dispositivo");
+  }
 
-  // Day-before reminder (separate key so both can fire the same session)
+  // Day-before reminder
   if(alertPrevDay){
-    try{
-      const k="ia-prev-"+tmStr;
-      if(!localStorage.getItem(k)){
-        const list=earningsOn(tmStr);
-        if(list.length){await sendAlertBatch(list,tmStr,"prev");localStorage.setItem(k,"1")}
-      }
-    }catch(e){console.error("[alert] día previo falló:",e)}
+    const pl=earningsOn(tmStr);
+    if(pl.length){
+      const key="prev-"+tmStr;
+      if(await claimAlertSlot(key,{mode:"prev",date:tmStr,tickers:pl.map(e=>e.t)})){
+        try{await sendAlertBatch(pl,tmStr,"prev")}
+        catch(e){console.error("[alert] envío previo falló:",e);await releaseAlertSlot(key)}
+      } else console.log("[alert] aviso previo ya enviado por otro dispositivo");
+    }
   }
 }
 
@@ -1506,6 +1572,14 @@ function testAlertPrev(){
       ? "✓ Prueba enviada SOLO a "+TEST_EMAIL+"\n\nMañana no hay reportes agendados, así que el correo usa una fila de ejemplo."
       : "✓ Prueba enviada SOLO a "+TEST_EMAIL+"\n\nCon los datos reales de mañana: "+list.map(e=>e.t).join(", ")))
     .catch(e=>alert("✗ Error: "+e.message));
+}
+
+function toggleAlertsEnabled(){
+  const cb=document.getElementById("alOn");
+  alertsEnabled=!!(cb&&cb.checked);
+  try{localStorage.setItem("ia-alerts-on",alertsEnabled?"1":"0")}catch(e){}
+  saveEJConfig();
+  renderCfg();
 }
 
 function saveTestEmail(){
