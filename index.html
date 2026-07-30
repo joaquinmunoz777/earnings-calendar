@@ -1420,7 +1420,7 @@ function buildEmailHTML(earnings,isoDate,mode){
   const up=upcomingAfter(iso,n===0?4:3);
   const upBlock=up.length?`
     <tr><td class="px" style="padding:26px 44px 0 44px">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${CLR.panel}" class="panel" style="background-color:${CLR.panel}">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${CLR.panel}" class="panel" style="background-color:${CLR.panel};border:1px solid ${CLR.line}">
         <tr><td style="padding:20px 24px 10px 24px;font-family:${FA};font-size:10px;line-height:15px;${LH}letter-spacing:2.6px;text-transform:uppercase;color:${CLR.mid}" class="mid">Próximos reportes del portafolio</td></tr>
         ${up.map(u=>`<tr><td style="padding:0 24px 8px 24px">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
@@ -1440,7 +1440,7 @@ function buildEmailHTML(earnings,isoDate,mode){
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td class="mid" style="font-family:${FA};font-size:11px;line-height:17px;${LH}color:${CLR.mid};padding-bottom:8px">Temporada ${new Date().getFullYear()} · <strong class="ink" style="color:${CLR.ink}">${st.rep} de ${st.tot}</strong> reportes publicados</td>
-          <td align="right" style="font-family:${FA};font-size:11px;line-height:17px;${LH}font-weight:bold;color:${CLR.gold};padding-bottom:8px">${st.pct}%</td>
+          <td align="right" class="gold" style="font-family:${FA};font-size:11px;line-height:17px;${LH}font-weight:bold;color:${CLR.gold};padding-bottom:8px">${st.pct}%</td>
         </tr>
         <tr><td colspan="2">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${CLR.track}" class="track" style="background-color:${CLR.track}"><tr>
@@ -1461,20 +1461,39 @@ function buildEmailHTML(earnings,isoDate,mode){
   return `<!--[if mso]><style>body,table,td,div,span,a,strong{font-family:Arial,Helvetica,sans-serif !important}.serif{font-family:Georgia,'Times New Roman',serif !important}</style><![endif]-->
 <style>
 :root{color-scheme:light dark;supported-color-schemes:light dark}
+/* Apple Mail, iOS, Gmail app: honour the reader's system preference */
 @media (prefers-color-scheme:dark){
-  .canvas{background:#0f1519 !important}
-  .card{background:#1a2028 !important;border-color:#2c3540 !important}
-  .ink{color:#f1efe9 !important}
-  .mid{color:#b3bfca !important}
-  .legal{color:#8d98a3 !important}
-  .line{border-color:#2c3540 !important}
-  .panel{background:#212832 !important}
-  .track{background:#2c3540 !important}
+  .canvas{background:#0c1014 !important}
+  .card{background:#151b22 !important;border-color:#2b3440 !important}
+  .hdrbg{background:#0e1620 !important}
+  .hdrlabel{color:#9fb0c4 !important}
+  .ink{color:#f2efe8 !important}
+  .mid{color:#b9c4cf !important}
+  .legal{color:#8e99a4 !important}
+  .line{border-color:#2b3440 !important}
+  .panel{background:#1b2430 !important;border-color:#2f3945 !important}
+  .track{background:#2b3440 !important}
+  .btn{background:#1a2c42 !important}
 }
+/* Outlook.com + Outlook for Windows ignore prefers-color-scheme and run their own
+   inversion, which drags everything toward mid-grey. They tag elements with
+   data-ogsc (text changed) / data-ogsb (background changed), so we override there. */
+[data-ogsc] .canvas,[data-ogsb] .canvas{background:#0c1014 !important}
+[data-ogsc] .card,[data-ogsb] .card{background:#151b22 !important;border-color:#2b3440 !important}
+[data-ogsc] .hdrbg,[data-ogsb] .hdrbg{background:#0e1620 !important}
+[data-ogsc] .hdrlabel,[data-ogsb] .hdrlabel{color:#9fb0c4 !important}
+[data-ogsc] .ink,[data-ogsb] .ink{color:#f2efe8 !important}
+[data-ogsc] .mid,[data-ogsb] .mid{color:#b9c4cf !important}
+[data-ogsc] .legal,[data-ogsb] .legal{color:#8e99a4 !important}
+[data-ogsc] .line,[data-ogsb] .line{border-color:#2b3440 !important}
+[data-ogsc] .panel,[data-ogsb] .panel{background:#1b2430 !important;border-color:#2f3945 !important}
+[data-ogsc] .track,[data-ogsb] .track{background:#2b3440 !important}
+[data-ogsc] .btn,[data-ogsb] .btn{background:#1a2c42 !important}
+[data-ogsc] .gold,[data-ogsb] .gold{color:#d1a355 !important}
 @media only screen and (max-width:620px){
   .px{padding-left:24px !important;padding-right:24px !important}
   .h1{font-size:28px !important;line-height:34px !important}
-  .hdr{padding-left:24px !important;padding-right:24px !important}
+  .hdr{padding-left:22px !important;padding-right:22px !important}
 }
 </style>
 <div style="display:none;font-size:1px;color:${CLR.card};line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden">${pre}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
@@ -1483,17 +1502,17 @@ function buildEmailHTML(earnings,isoDate,mode){
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="${CLR.card}" class="card" style="width:600px;max-width:600px;background-color:${CLR.card};border:1px solid ${CLR.line}">
 
   <!-- Header: navy with a gold rule. Dark surfaces are left alone by every client. -->
-  <tr><td bgcolor="${CLR.navy}" style="background-color:${CLR.navy};padding:0" width="600">
+  <tr><td bgcolor="${CLR.navy}" class="hdrbg" style="background-color:${CLR.navy};padding:0" width="600">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
       <td width="8" bgcolor="${CLR.gold}" style="width:8px;background-color:${CLR.gold};font-size:0;line-height:0">&nbsp;</td>
-      <td class="hdr" style="padding:20px 26px;font-family:${FA};font-size:10px;line-height:15px;${LH}letter-spacing:3.4px;text-transform:uppercase;color:${CLR.hdrTxt}">Inversiones Adriana</td>
-      <td class="hdr" align="right" style="padding:20px 26px;font-family:${FA};font-size:10px;line-height:15px;${LH}letter-spacing:2.2px;text-transform:uppercase;color:${CLR.hdrTxt2};white-space:nowrap">${hdrLabel}</td>
+      <td class="hdr hdrbg hdrlabel" bgcolor="${CLR.navy}" style="background-color:${CLR.navy};padding:20px 26px;font-family:${FA};font-size:10px;line-height:15px;${LH}letter-spacing:3.4px;text-transform:uppercase;color:${CLR.hdrTxt}">Inversiones Adriana</td>
+      <td class="hdr hdrbg hdrlabel" bgcolor="${CLR.navy}" align="right" style="background-color:${CLR.navy};padding:20px 26px;font-family:${FA};font-size:10px;line-height:15px;${LH}letter-spacing:2.2px;text-transform:uppercase;color:${CLR.hdrTxt2};white-space:nowrap">${hdrLabel}</td>
     </tr></table>
   </td></tr>
 
   <!-- Headline -->
   <tr><td class="px" style="padding:38px 44px 0 44px">
-    <div style="font-family:${FA};font-size:10px;line-height:15px;${LH}font-weight:bold;letter-spacing:2.8px;text-transform:uppercase;color:${n===0?CLR.mid:CLR.gold}">${kicker}</div>
+    <div class="${n===0?"mid":"gold"}" style="font-family:${FA};font-size:10px;line-height:15px;${LH}font-weight:bold;letter-spacing:2.8px;text-transform:uppercase;color:${n===0?CLR.mid:CLR.gold}">${kicker}</div>
     <div class="serif h1 ink" style="font-family:${FG};font-size:34px;line-height:40px;${LH}color:${CLR.ink};padding-top:14px">${head}</div>
     <div class="mid" style="font-family:${FA};font-size:13px;line-height:20px;${LH}color:${CLR.mid};padding-top:12px">${sub}</div>
   </td></tr>
@@ -1505,7 +1524,7 @@ function buildEmailHTML(earnings,isoDate,mode){
   <!-- CTA: bulletproof button (td bgcolor + block-level anchor) -->
   <tr><td class="px" style="padding:30px 44px 0 44px">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td bgcolor="${CLR.navy}" class="btn" style="background-color:${CLR.navy}">
+      <td bgcolor="${CLR.navy}" class="btn" style="background-color:${CLR.navy};border:1px solid ${CLR.gold}">
         <a href="https://joaquinmunoz777.github.io/earnings-calendar/" style="display:block;padding:14px 28px;font-family:${FA};font-size:13px;line-height:18px;${LH}font-weight:bold;letter-spacing:.6px;color:#ffffff;text-decoration:none">Ver calendario completo &rarr;</a>
       </td>
     </tr></table>
