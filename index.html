@@ -346,6 +346,7 @@ const FB={apiKey:"AIzaSyCaveZCUCjaC35VMWSdAX_EgsB-605s5Zo",authDomain:"earnings-
 // EmailJS config — set these after creating your EmailJS account
 let EJ={serviceId:"",templateId:"",publicKey:""};
 let ALERT_EMAILS=["juanpablo@iadriana.cl","jmunoz@iadriana.cl"];
+let alertPrevDay=true;   // also warn the day before an earnings date
 
 // Finnhub API config — free key from https://finnhub.io (60 calls/min)
 let FINNHUB_KEY="";
@@ -504,7 +505,7 @@ function iF(){
       try{if(typeof applyVerifiedDates==="function"&&applyVerifiedDates(s.val()))rn()}
       catch(e){console.error("[verify] listener error:",e)}
     });
-    dr.child("emailjs-config").on("value",s=>{const c=s.val();if(c){EJ.serviceId=c.serviceId||"";EJ.templateId=c.templateId||"";EJ.publicKey=c.publicKey||"";if(c.emails&&c.emails.length)ALERT_EMAILS=c.emails}});
+    dr.child("emailjs-config").on("value",s=>{const c=s.val();if(c){EJ.serviceId=c.serviceId||"";EJ.templateId=c.templateId||"";EJ.publicKey=c.publicKey||"";if(c.emails&&c.emails.length)ALERT_EMAILS=c.emails;if(typeof c.alertPrev==="boolean")alertPrevDay=c.alertPrev}});
   }catch(e){sC("local");lL();loadCustomTickers();rn()}}
 function sC(s){const d=document.getElementById("cD"),t=document.getElementById("cT");
   if(s==="ok"){d.style.background="var(--gn)";t.textContent="Firebase conectado";t.style.color="var(--gn)"}
@@ -690,7 +691,7 @@ function renderCfg(){
   const emailList=ALERT_EMAILS.map(e=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="font-family:var(--mn);font-size:12px;color:var(--t1)">${maskEmail(e)}</span><button class="cfg-del" onclick="removeAlertEmail('${e}')" style="padding:1px 6px;font-size:8px">✕</button></div>`).join("");
   h+=`<div style="margin-top:24px;border-top:1px solid var(--bd);padding-top:20px">
     <div class="cfg-hdr"><h2>Alertas por Email</h2><span class="cfg-count">${ALERT_EMAILS.length} destinatario${ALERT_EMAILS.length!==1?'s':''}</span></div>
-    <p style="font-size:11px;color:var(--t3);margin-bottom:12px;line-height:1.5">Se envía un correo automático el día que un ticker reporta earnings. Máximo una vez por día.</p>
+    <p style="font-size:11px;color:var(--t3);margin-bottom:12px;line-height:1.5">Se envía un correo automático el día que un ticker reporta earnings, y opcionalmente un aviso el día anterior. Cada aviso se manda una sola vez. Los tickers ya marcados como reportados se omiten.</p>
     <div class="add-form"><h3>DESTINATARIOS</h3>
       <div style="margin-bottom:10px">${emailList||'<span style="font-size:11px;color:var(--t4)">Sin destinatarios</span>'}</div>
       <div class="add-row">
@@ -698,13 +699,29 @@ function renderCfg(){
         <button class="add-btn" onclick="addAlertEmail()">+ Agregar</button>
       </div>
     </div>
+    <div class="add-form" style="margin-top:10px"><h3>CUÁNDO AVISAR</h3>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2)">
+          <input type="checkbox" checked disabled style="width:auto" />
+          <span>El día del reporte <span style="color:var(--t4);font-size:11px">(siempre activo)</span></span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);cursor:pointer">
+          <input type="checkbox" id="alPrev" onchange="toggleAlertPrev()" ${alertPrevDay?"checked":""} style="width:auto;cursor:pointer" />
+          <span>El día anterior al reporte</span>
+        </label>
+      </div>
+      <div class="add-row" style="margin-top:12px">
+        <button class="add-btn" onclick="testAlert()" style="border-color:var(--gnd);color:var(--gn);background:transparent">Probar aviso del día</button>
+        <button class="add-btn" onclick="testAlertPrev()" style="border-color:var(--ywd);color:var(--yw);background:transparent">Probar aviso previo</button>
+      </div>
+      <div class="add-st" id="alSt">${upcomingAlertsLabel()}</div>
+    </div>
     <div class="add-form" style="margin-top:10px"><h3>CREDENCIALES EMAILJS</h3>
       <div class="add-row">
         <div class="add-fg"><label>Service ID</label><input id="ejSvc" value="${EJ.serviceId}" placeholder="service_xxxxxxx" style="width:160px" /></div>
         <div class="add-fg"><label>Template ID</label><input id="ejTpl" value="${EJ.templateId}" placeholder="template_xxxxxxx" style="width:160px" /></div>
         <div class="add-fg"><label>Public Key</label><input id="ejKey" value="${EJ.publicKey}" placeholder="XXXXXXXXXXXXXXX" style="width:160px" /></div>
         <button class="add-btn" onclick="saveEJFields()">Guardar</button>
-        <button class="add-btn" onclick="testAlert()" style="border-color:var(--gnd);color:var(--gn)">Enviar prueba</button>
       </div>
       <div class="add-st" id="ejSt">${EJ.serviceId?"✓ Configurado":"Sin configurar — las alertas no se enviarán"}</div>
     </div>
@@ -738,6 +755,29 @@ function renderCfg(){
     <p style="font-size:10px;color:var(--t4);margin-top:10px;line-height:1.5">Finnhub cubre bolsas de EEUU (incluye ADR como BABA, DLO, GLOB, STNE, XP, TAL). Los listados solo en bolsas extranjeras (NEXI/Milán, AKZO/Euronext, TWE/ASX, CS/TSX, DVI/BVC, HAPV3/B3, MBRFY/OTC) quedan como "sin cobertura" y hay que revisarlos a mano.</p>
   </div>`;
   panel.innerHTML=h;
+}
+
+// Preview of the next scheduled alerts, so it's obvious the system is armed
+function upcomingAlertsLabel(){
+  try{
+    if(!EJ.serviceId||!ALERT_EMAILS.length)return "";
+    const t=new Date();t.setHours(0,0,0,0);
+    const rows=[];
+    for(let i=0;i<14;i++){
+      const d=new Date(t);d.setDate(d.getDate()+i);
+      const ds=d.toISOString().split("T")[0];
+      const list=earningsOn(ds);
+      if(list.length)rows.push({ds,n:list.length,tks:list.map(e=>e.t)});
+      if(rows.length>=2)break;
+    }
+    if(!rows.length)return "Sin reportes en los próximos 14 días.";
+    const parts=rows.map(r=>{
+      const days=Math.round((new Date(r.ds+"T00:00:00")-t)/86400000);
+      const when=days===0?"hoy":days===1?"mañana":`en ${days}d`;
+      return `${r.tks.slice(0,4).join(", ")}${r.tks.length>4?` +${r.tks.length-4}`:""} ${when}`;
+    });
+    return "Próximos avisos: "+parts.join(" · ");
+  }catch(e){return ""}
 }
 
 function lastVerifyLabel(){
@@ -1168,11 +1208,12 @@ function removeTicker(t){
 function loadEJConfig(){
   try{
     const raw=localStorage.getItem("ia-ej");
-    if(raw){const c=JSON.parse(raw);EJ.serviceId=c.serviceId||"";EJ.templateId=c.templateId||"";EJ.publicKey=c.publicKey||"";if(c.emails&&c.emails.length)ALERT_EMAILS=c.emails;FINNHUB_KEY=c.finnhubKey||""}
+    if(raw){const c=JSON.parse(raw);EJ.serviceId=c.serviceId||"";EJ.templateId=c.templateId||"";EJ.publicKey=c.publicKey||"";if(c.emails&&c.emails.length)ALERT_EMAILS=c.emails;FINNHUB_KEY=c.finnhubKey||"";if(typeof c.alertPrev==="boolean")alertPrevDay=c.alertPrev}
+    const ap=localStorage.getItem("ia-alert-prev");if(ap!==null)alertPrevDay=ap==="1";
   }catch(e){}
 }
 function saveEJConfig(){
-  const data={...EJ,emails:ALERT_EMAILS,finnhubKey:FINNHUB_KEY};
+  const data={...EJ,emails:ALERT_EMAILS,finnhubKey:FINNHUB_KEY,alertPrev:alertPrevDay};
   localStorage.setItem("ia-ej",JSON.stringify(data));
   if(uf&&dr)dr.child("emailjs-config").set(data);
 }
@@ -1189,7 +1230,9 @@ function removeAlertEmail(email){
   saveEJConfig();renderCfg();
 }
 
-function buildEmailHTML(earnings,dateStr){
+function buildEmailHTML(earnings,dateStr,mode){
+  const isPrev=mode==="prev";
+  const accent=isPrev?"#c19a3e":"#1a1f2e";
   const rows=earnings.map(e=>`
     <tr>
       <td style="padding:10px 16px;border-bottom:1px solid #e8e8e8;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:700;color:#1a1a1a;letter-spacing:0.5px">${e.t}</td>
@@ -1197,16 +1240,17 @@ function buildEmailHTML(earnings,dateStr){
       <td style="padding:10px 16px;border-bottom:1px solid #e8e8e8;font-family:'Courier New',monospace;font-size:12px;color:#666">${e.q}</td>
       <td style="padding:10px 16px;border-bottom:1px solid #e8e8e8;font-family:'Courier New',monospace;font-size:12px;color:#888">${e.x}</td>
     </tr>`).join("");
+  const intro=isPrev
+    ? `<strong>Mañana ${dateStr}</strong> reporta${earnings.length>1?'n':''} <strong style="color:${accent}">${earnings.length}</strong> acción${earnings.length>1?'es':''} del portafolio:`
+    : `Hoy <strong>${dateStr}</strong> reporta${earnings.length>1?'n':''} <strong style="color:${accent}">${earnings.length}</strong> acción${earnings.length>1?'es':''} del portafolio:`;
   return `
     <div style="max-width:600px;margin:0 auto;font-family:'Helvetica Neue',Arial,sans-serif">
-      <div style="background:#1a1f2e;padding:24px 28px;border-radius:4px 4px 0 0">
+      <div style="background:${isPrev?'#2a2416':'#1a1f2e'};padding:24px 28px;border-radius:4px 4px 0 0">
         <div style="font-size:10px;letter-spacing:2px;color:#7a8599;text-transform:uppercase;margin-bottom:4px">Inversiones Adriana</div>
-        <div style="font-size:20px;font-weight:700;color:#ffffff">Earnings Alert</div>
+        <div style="font-size:20px;font-weight:700;color:#ffffff">${isPrev?"Earnings — Aviso previo":"Earnings Alert"}</div>
       </div>
       <div style="background:#ffffff;padding:24px 28px;border-left:1px solid #e8e8e8;border-right:1px solid #e8e8e8">
-        <p style="font-size:14px;color:#333;line-height:1.6;margin:0 0 20px 0">
-          Hoy <strong>${dateStr}</strong> reporta${earnings.length>1?'n':''} <strong style="color:#1a1f2e">${earnings.length}</strong> acción${earnings.length>1?'es':''} del portafolio:
-        </p>
+        <p style="font-size:14px;color:#333;line-height:1.6;margin:0 0 20px 0">${intro}</p>
         <table style="width:100%;border-collapse:collapse;border:1px solid #e8e8e8;border-radius:4px">
           <tr style="background:#f5f7fa">
             <th style="padding:10px 16px;text-align:left;font-family:'Helvetica Neue',Arial,sans-serif;font-size:10px;font-weight:700;color:#7a8599;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #e0e0e0">Ticker</th>
@@ -1218,7 +1262,7 @@ function buildEmailHTML(earnings,dateStr){
         </table>
       </div>
       <div style="background:#f5f7fa;padding:16px 28px;border:1px solid #e8e8e8;border-top:0;border-radius:0 0 4px 4px">
-        <p style="font-size:11px;color:#999;margin:0;font-family:'Helvetica Neue',Arial,sans-serif">Earnings Calendar — Inversiones Adriana · Este correo se envía automáticamente el día de cada reporte.</p>
+        <p style="font-size:11px;color:#999;margin:0;font-family:'Helvetica Neue',Arial,sans-serif">Earnings Calendar — Inversiones Adriana · ${isPrev?"Aviso enviado el día previo al reporte.":"Aviso enviado el día del reporte."}</p>
       </div>
     </div>`;
 }
@@ -1231,39 +1275,95 @@ async function sendEmailJS(toEmail,subject,htmlBody){
       service_id:EJ.serviceId,
       template_id:EJ.templateId,
       user_id:EJ.publicKey,
-      template_params:{to_email:toEmail,subject:subject,message:htmlBody}
+      // name/email feed the template's "From Name" and "Reply To" fields
+      template_params:{
+        to_email:toEmail,
+        subject:subject,
+        message:htmlBody,
+        name:"iA Earnings Calendar",
+        email:ALERT_EMAILS[0]||toEmail
+      }
     })
   });
   if(!res.ok)throw new Error(await res.text());
   return res;
 }
 
+// Collects earnings scheduled for a given date, skipping ones already marked reported
+function earningsOn(dateStr){
+  return P.filter(co=>co&&co.t&&!hiddenTickers.includes(co.t))
+    .flatMap(co=>(Array.isArray(co.q)?co.q:[]).map(q=>({t:co.t,n:co.n,s:co.s,x:co.x,q:q.q,d:q.d})))
+    .filter(e=>e.d===dateStr&&!ic(e.t,e.q,"reported"));
+}
+
+async function sendAlertBatch(list,dateStr,mode){
+  const isPrev=mode==="prev";
+  const html=buildEmailHTML(list,fd(dateStr),mode);
+  const tks=list.map(e=>e.t).join(", ");
+  const subj=isPrev
+    ? `iA Earnings — ${tks} reporta${list.length>1?'n':''} mañana`
+    : `iA Earnings — ${tks} reporta${list.length>1?'n':''} hoy`;
+  for(const email of ALERT_EMAILS){await sendEmailJS(email,subj,html)}
+  console.log(`[alert] ${mode} enviado a ${ALERT_EMAILS.length} destinatarios:`,tks);
+}
+
 async function checkAndSendAlerts(){
   if(!EJ.serviceId||!EJ.templateId||!EJ.publicKey)return;
-  const today=new Date();today.setHours(0,0,0,0);
-  const todayStr=today.toISOString().split("T")[0];
-  const sentKey="ia-alert-"+todayStr;
-  if(localStorage.getItem(sentKey))return;
-  const todayEarnings=P.filter(co=>!hiddenTickers.includes(co.t))
-    .flatMap(co=>co.q.map(q=>({t:co.t,n:co.n,s:co.s,x:co.x,q:q.q,d:q.d})))
-    .filter(e=>e.d===todayStr);
-  if(!todayEarnings.length)return;
-  const html=buildEmailHTML(todayEarnings,fd(todayStr));
-  const subj=`iA Earnings — ${todayEarnings.map(e=>e.t).join(", ")} reporta${todayEarnings.length>1?'n':''} hoy`;
+  if(!ALERT_EMAILS.length)return;
+  const t=new Date();t.setHours(0,0,0,0);
+  const todayStr=t.toISOString().split("T")[0];
+  const tm=new Date(t);tm.setDate(tm.getDate()+1);
+  const tmStr=tm.toISOString().split("T")[0];
+
+  // Day-of alert
   try{
-    for(const email of ALERT_EMAILS){await sendEmailJS(email,subj,html)}
-    localStorage.setItem(sentKey,"1");
-    console.log("Alert sent:",todayEarnings.map(e=>e.t).join(", "));
-  }catch(e){console.error("EmailJS error:",e)}
+    const k="ia-alert-"+todayStr;
+    if(!localStorage.getItem(k)){
+      const list=earningsOn(todayStr);
+      if(list.length){await sendAlertBatch(list,todayStr,"day");localStorage.setItem(k,"1")}
+    }
+  }catch(e){console.error("[alert] day-of falló:",e)}
+
+  // Day-before reminder (separate key so both can fire the same session)
+  if(alertPrevDay){
+    try{
+      const k="ia-prev-"+tmStr;
+      if(!localStorage.getItem(k)){
+        const list=earningsOn(tmStr);
+        if(list.length){await sendAlertBatch(list,tmStr,"prev");localStorage.setItem(k,"1")}
+      }
+    }catch(e){console.error("[alert] día previo falló:",e)}
+  }
 }
 
 function testAlert(){
   if(!EJ.serviceId||!EJ.templateId||!EJ.publicKey){alert("Configurá las credenciales de EmailJS primero.");return}
+  if(!ALERT_EMAILS.length){alert("Agregá al menos un destinatario.");return}
   const sample=[{t:"NVDA",n:"NVIDIA Corp.",q:"Q1 26",x:"NASDAQ"},{t:"UNH",n:"UnitedHealth Group",q:"Q1 26",x:"NYSE"}];
-  const html=buildEmailHTML(sample,fd(new Date().toISOString().split("T")[0]));
+  const html=buildEmailHTML(sample,fd(new Date().toISOString().split("T")[0]),"day");
   sendEmailJS(ALERT_EMAILS[0],"iA Earnings Alert — Prueba",html)
     .then(()=>alert("✓ Email de prueba enviado a "+ALERT_EMAILS[0]))
     .catch(e=>alert("✗ Error: "+e.message));
+}
+
+function testAlertPrev(){
+  if(!EJ.serviceId||!EJ.templateId||!EJ.publicKey){alert("Configurá las credenciales de EmailJS primero.");return}
+  if(!ALERT_EMAILS.length){alert("Agregá al menos un destinatario.");return}
+  const tm=new Date();tm.setDate(tm.getDate()+1);
+  const sample=[{t:"BABA",n:"Alibaba (ADR)",q:"Q1 FY27",x:"NYSE"}];
+  const html=buildEmailHTML(sample,fd(tm.toISOString().split("T")[0]),"prev");
+  sendEmailJS(ALERT_EMAILS[0],"iA Earnings — Prueba aviso previo",html)
+    .then(()=>alert("✓ Email de prueba (aviso previo) enviado a "+ALERT_EMAILS[0]))
+    .catch(e=>alert("✗ Error: "+e.message));
+}
+
+function toggleAlertPrev(){
+  const cb=document.getElementById("alPrev");
+  alertPrevDay=!!(cb&&cb.checked);
+  try{localStorage.setItem("ia-alert-prev",alertPrevDay?"1":"0")}catch(e){}
+  if(uf&&dr)saveEJConfig();
+  const st=document.getElementById("ejSt");
+  if(st){st.textContent=alertPrevDay?"✓ Aviso del día previo activado.":"Aviso del día previo desactivado — solo se envía el día del reporte.";st.className="add-st "+(alertPrevDay?"ok":"")}
 }
 
 // =======================================================================
