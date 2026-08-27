@@ -299,6 +299,7 @@ async function bootApp(){
   // 2) Firebase init (loads saved checkmarks + custom tickers). Doesn't block UI if it fails.
   try{
     if(typeof loadAutoVerify==="function")loadAutoVerify();
+    if(typeof applyCMFBase==="function")applyCMFBase();
     if(typeof loadVerifiedDates==="function"){loadVerifiedDates();rn()}
     if(typeof iF==="function")iF();
     if(typeof lL==="function"&&!uf)lL();
@@ -359,25 +360,25 @@ let FINNHUB_KEY="";
 // =======================================================================
 const P=[
 // CHILENAS
-{t:"CENCOSUD",n:"Cencosud S.A.",s:"Retail",x:"BCS",cmfRut:"93834000-0",cmfName:"CENCOSUD",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"CENCOSUD",n:"Cencosud S.A.",s:"Retail",x:"BCS",cmfRut:"93834000-5",cmfName:"CENCOSUD",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
 {t:"ENTEL",n:"Entel S.A.",s:"Telecom",x:"BCS",cmfRut:"92580000-7",cmfName:"EMPRESA NACIONAL DE TELECOMUNICACIONES",q:[{q:"Q1 26",d:"2026-05-04"},{q:"Q2 26",d:"2026-08-03"},{q:"Q3 26",d:"2026-11-02"},{q:"FY 26",d:"2027-01-27"}]},
 {t:"SONDA",n:"Sonda S.A.",s:"IT Services",x:"BCS",cmfRut:"83628100-4",cmfName:"SONDA",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
-{t:"MANQUEHUE",n:"Inmob. Manquehue",s:"Real Estate",x:"BCS",cmfName:"MANQUEHUE",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
-{t:"ILC",n:"Inv. La Construcción",s:"Holding",x:"BCS",cmfName:"INVERSIONES LA CONSTRUCCION",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
-{t:"ANDINA-A",n:"Embotelladora Andina",s:"Bebidas",x:"BCS",cmfName:"EMBOTELLADORA ANDINA",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"MANQUEHUE",n:"Inmob. Manquehue",s:"Real Estate",x:"BCS",cmfRut:"88745400-0",cmfName:"MANQUEHUE",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"ILC",n:"Inv. La Construcción",s:"Holding",x:"BCS",cmfRut:"94139000-5",cmfName:"INVERSIONES LA CONSTRUCCION",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"ANDINA-A",n:"Embotelladora Andina",s:"Bebidas",x:"BCS",cmfRut:"91144000-8",cmfName:"EMBOTELLADORA ANDINA",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
 {t:"ITAUCORP",n:"Banco Itaú Chile",s:"Banca",x:"BCS",cmfName:"ITAU",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
 {t:"ECL",n:"Engie Energía Chile",s:"Energía",x:"BCS",cmfRut:"88006900-4",cmfName:"ENGIE ENERGIA CHILE",q:[{q:"Q1 26",d:"2026-04-29"},{q:"Q2 26",d:"2026-07-29"},{q:"Q3 26",d:"2026-10-28"},{q:"FY 26",d:"2027-01-27"}]},
-{t:"MULTIX",n:"Multiexport Foods",s:"Salmón",x:"BCS",cmfName:"MULTIEXPORT",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
-{t:"IAM",n:"IAM S.A.",s:"Agua",x:"BCS",cmfName:"IAM",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
-{t:"CONCHATORO",n:"Viña Concha y Toro",s:"Vinos",x:"BCS",cmfName:"CONCHA Y TORO",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"MULTIX",n:"Multiexport Foods",s:"Salmón",x:"BCS",cmfRut:"76672100-1",cmfName:"MULTIEXPORT",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"IAM",n:"IAM S.A.",s:"Agua",x:"BCS",cmfRut:"77274820-5",cmfName:"IAM",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"CONCHATORO",n:"Viña Concha y Toro",s:"Vinos",x:"BCS",cmfRut:"90227000-0",cmfName:"CONCHA Y TORO",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
 {t:"VAPORES",n:"CSAV / Vapores",s:"Naviero",x:"BCS",cmfRut:"90160000-7",cmfName:"SUD AMERICANA DE VAPORES",q:[{q:"Q1 26",d:"2026-05-25"},{q:"Q2 26",d:"2026-08-28"},{q:"Q3 26",d:"2026-11-20"},{q:"FY 26",d:""}]},
 {t:"BCI",n:"Banco BCI",s:"Banca",x:"BCS",cmfRut:"97006000-6",cmfName:"BANCO DE CREDITO E INVERSIONES",q:[{q:"Q1 26",d:"2026-04-30"},{q:"Q2 26",d:"2026-07-31"},{q:"Q3 26",d:"2026-10-30"},{q:"FY 26",d:"2027-02-26"}]},
 {t:"SQM-B",n:"SQM S.A.",s:"Litio / Químicos",x:"BCS/NYSE",cmfRut:"93007000-9",cmfName:"SOCIEDAD QUIMICA Y MINERA",q:[{q:"Q1 26",d:"2026-05-26"},{q:"Q2 26",d:"2026-08-18"},{q:"Q3 26",d:"2026-11-17"},{q:"FY 26",d:""}]},
-{t:"ANTARCHILE",n:"Antarchile S.A.",s:"Holding",x:"BCS",cmfName:"ANTARCHILE",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
-{t:"NUTRAVALOR",n:"Inv. Nutravalor",s:"Holding",x:"BCS",cmfName:"NUTRAVALOR",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
-{t:"SIEMEL",n:"Siemel S.A.",s:"Financiero",x:"BCS",cmfName:"SIEMEL",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
-{t:"VENTANAS",n:"Puerto Ventanas",s:"Puertos",x:"BCS",cmfName:"PUERTO VENTANAS",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
-{t:"DUNCANFOX",n:"Duncan Fox S.A.",s:"Holding",x:"BCS",cmfName:"DUNCAN FOX",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"ANTARCHILE",n:"Antarchile S.A.",s:"Holding",x:"BCS",cmfRut:"96556310-5",cmfName:"ANTARCHILE",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"NUTRAVALOR",n:"Inv. Nutravalor",s:"Holding",x:"BCS",cmfRut:"91643000-0",cmfName:"NUTRAVALOR",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"SIEMEL",n:"Siemel S.A.",s:"Financiero",x:"BCS",cmfRut:"94082000-6",cmfName:"SIEMEL",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"VENTANAS",n:"Puerto Ventanas",s:"Puertos",x:"BCS",cmfRut:"96602640-5",cmfName:"PUERTO VENTANAS",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
+{t:"DUNCANFOX",n:"Duncan Fox S.A.",s:"Holding",x:"BCS",cmfRut:"96761990-6",cmfName:"DUNCAN FOX",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
 {t:"CCU",n:"Cervecerías Unidas",s:"Bebidas",x:"BCS/NYSE",cmfName:"CERVECERIAS UNIDAS",q:[{q:"Q1 26",d:""},{q:"Q2 26",d:""},{q:"Q3 26",d:""},{q:"FY 26",d:""}]},
 // INTERNACIONALES
 {t:"CERT",n:"Certara Inc.",s:"Healthcare",x:"NASDAQ",yf:"CERT",q:[{q:"Q1 26",d:"2026-05-11"},{q:"Q2 26",d:"2026-08-04"},{q:"Q3 26",d:"2026-11-05"}]},/*Q2 confirmed Certara IR 2026-07-15*/
@@ -386,9 +387,9 @@ const P=[
 {t:"GPRO",n:"GoPro Inc.",s:"Consumer Elec.",x:"NASDAQ",yf:"GPRO",q:[{q:"Q1 26",d:"2026-05-11"},{q:"Q2 26",d:"2026-08-10"},{q:"Q3 26",d:"2026-11-05"}]},/*Q2 confirmed GoPro IR 2026-07-27*/
 {t:"WPP",n:"WPP plc",s:"Media / Advert.",x:"NYSE/LSE",yf:"WPP",q:[{q:"Q1 26",d:"2026-04-28"},{q:"H1 26",d:"2026-08-06"},{q:"Q3 26",d:"2026-10-27"}]},/*H1 confirmed WPP RNS 2026-07-08*//*auto mixed TipRanks (H1 confirmed), StockTitan (Q1 trading update), estimated (Q3) 2026-04-20*/
 {t:"PYPL",n:"PayPal Holdings",s:"Fintech",x:"NASDAQ",yf:"PYPL",q:[{q:"Q1 26",d:"2026-05-05"},{q:"Q2 26",d:"2026-07-28"},{q:"Q3 26",d:"2026-10-27"}]},/*Q1 REPORTED;Q2/Q3 confirmed SimplyWallSt 2026-05*/
-{t:"BABA",n:"Alibaba (ADR)",s:"E-commerce",x:"NYSE",yf:"BABA",q:[{q:"Q4 FY26",d:"2026-05-14"},{q:"Q1 FY27",d:"2026-08-28"},{q:"Q2 FY27",d:"2026-11-12"}]},/*Q1FY27 confirmed TipRanks 2026-07*/
+{t:"BABA",n:"Alibaba (ADR)",s:"E-commerce",x:"NYSE",yf:"BABA",q:[{q:"Q4 FY26",d:"2026-05-14"},{q:"Q1 FY27",d:"2026-08-20"},{q:"Q2 FY27",d:"2026-11-12"}]},/*Q1FY27 REPORTED 2026-08-20 IR*/,/*Q1FY27 confirmed TipRanks 2026-07*/
 {t:"UBER",n:"Uber Technologies",s:"Mobility",x:"NYSE",yf:"UBER",q:[{q:"Q1 26",d:"2026-05-06"},{q:"Q2 26",d:"2026-08-05"},{q:"Q3 26",d:"2026-11-05"}]},/*Q1 REPORTED;Q2 confirmed public.com*/
-{t:"CRM",n:"Salesforce Inc.",s:"Cloud / SaaS",x:"NYSE",yf:"CRM",q:[{q:"Q1 FY27",d:"2026-05-27"},{q:"Q2 FY27",d:"2026-09-02"},{q:"Q3 FY27",d:"2026-12-03"}]},/*Q1 REPORTED;Q2 est. public.com/Investing*/
+{t:"CRM",n:"Salesforce Inc.",s:"Cloud / SaaS",x:"NYSE",yf:"CRM",q:[{q:"Q1 FY27",d:"2026-05-27"},{q:"Q2 FY27",d:"2026-08-26"},{q:"Q3 FY27",d:"2026-12-03"}]},/*Q2FY27 REPORTED 2026-08-26 IR*/,/*Q1 REPORTED;Q2 est. public.com/Investing*/
 {t:"STNE",n:"StoneCo Ltd.",s:"Fintech Brasil",x:"NASDAQ",yf:"STNE",q:[{q:"Q1 26",d:"2026-05-14"},{q:"Q2 26",d:"2026-08-13"},{q:"Q3 26",d:"2026-11-12"}]},/*Q1 confirmed IR 2026-04-02*/
 {t:"UNH",n:"UnitedHealth Group",s:"Healthcare",x:"NYSE",yf:"UNH",q:[{q:"Q1 26",d:"2026-04-21"},{q:"Q2 26",d:"2026-07-16"},{q:"Q3 26",d:"2026-10-27"}]},/*Q1+Q2 REPORTED;Q2 IR 2026-07-16;Q3 public.com*/
 {t:"KKR",n:"KKR & Co Inc.",s:"Private Equity",x:"NYSE",yf:"KKR",q:[{q:"Q1 26",d:"2026-05-05"},{q:"Q2 26",d:"2026-07-30"},{q:"Q3 26",d:"2026-11-03"}]},/*Q2 REPORTED 2026-07-30 BW*/
@@ -396,7 +397,7 @@ const P=[
 {t:"FNMA",n:"Fannie Mae",s:"GSE",x:"OTC",yf:"FNMA",q:[{q:"Q1 26",d:"2026-04-29"},{q:"Q2 26",d:"2026-07-29"},{q:"Q3 26",d:"2026-11-06"}]},/*Q1+Q2 REPORTED;Q2 2026-07-29*/
 {t:"AVAL",n:"Grupo Aval",s:"Banca Colombia",x:"NYSE",yf:"AVAL",q:[{q:"Q1 26",d:"2026-05-13"},{q:"Q2 26",d:"2026-08-13"},{q:"Q3 26",d:"2026-11-12"}]},/*Q1 REPORTED 2026-05-13*/
 {t:"XP",n:"XP Inc.",s:"Brokerage Brasil",x:"NASDAQ",yf:"XP",q:[{q:"Q1 26",d:"2026-05-18"},{q:"Q2 26",d:"2026-08-17"},{q:"Q3 26",d:"2026-11-16"}]},/*Q1 REPORTED 2026-05-18;Q2 confirmed XP IR*/
-{t:"WOOF",n:"Petco Health",s:"Retail Mascotas",x:"NASDAQ",yf:"WOOF",q:[{q:"Q1 FY27",d:"2026-05-27"},{q:"Q2 FY27",d:"2026-08-27"},{q:"Q3 FY27",d:"2026-11-27"}]},/*auto confirmed TipRanks 2026-04-20*/
+{t:"WOOF",n:"Petco Health",s:"Retail Mascotas",x:"NASDAQ",yf:"WOOF",q:[{q:"Q1 FY27",d:"2026-05-27"},{q:"Q2 FY27",d:"2026-09-02"},{q:"Q3 FY27",d:"2026-11-27"}]},/*auto confirmed TipRanks 2026-04-20*/
 {t:"NEXI",n:"Nexi SpA",s:"Payments Italia",x:"MI",q:[{q:"H1 26",d:"2026-07-29"},{q:"9M 26",d:"2026-11-05"}]},/*H1 REPORTED 2026-07-29*/
 {t:"TAL",n:"TAL Education",s:"Educación China",x:"NYSE",yf:"TAL",q:[{q:"Q4 FY26",d:"2026-04-23"},{q:"Q1 FY27",d:"2026-07-30"},{q:"Q2 FY27",d:"2026-10-23"}]},/*Q1FY27 REPORTED 2026-07-30 IR*/
 {t:"SSW",n:"Sibanye Stillwater",s:"Minería PGMs",x:"JSE/NYSE",yf:"SBSW",q:[{q:"Q1 26",d:"2026-05-06"},{q:"H1 26",d:"2026-09-01"}]},/*Q1 REPORTED;H1 confirmed Sibanye IR*/
@@ -415,7 +416,7 @@ const P=[
 {t:"CS",n:"Capstone Copper",s:"Minería Cobre",x:"TSX",q:[{q:"Q1 26",d:"2026-05-07"},{q:"Q2 26",d:"2026-07-30"},{q:"Q3 26",d:"2026-11-05"}]},/*Q2 REPORTED 2026-07-30 IR*/
 {t:"AXTA",n:"Axalta Coating",s:"Químicos",x:"NYSE",yf:"AXTA",q:[{q:"Q1 26",d:"2026-04-30"},{q:"Q2 26",d:"2026-07-28"},{q:"Q3 26",d:"2026-10-28"}]},/*Q2 REPORTED 2026-07-28 IR; merger AkzoNobel vote 5ago*/
 {t:"AKZO",n:"Akzo Nobel N.V.",s:"Químicos",x:"Euronext",q:[{q:"Q1 26",d:"2026-04-22"},{q:"Q2 26",d:"2026-07-22"},{q:"Q3 26",d:"2026-10-21"}]},/*Q1 REPORTED 2026-04-22*/
-{t:"NCNO",n:"nCino Inc.",s:"Cloud Banking",x:"NASDAQ",yf:"NCNO",q:[{q:"Q1 FY27",d:"2026-05-27"},{q:"Q2 FY27",d:"2026-09-01"},{q:"Q3 FY27",d:"2026-12-01"}]},/*Q1FY27 confirmed nCino IR 2026-05-14*/
+{t:"NCNO",n:"nCino Inc.",s:"Cloud Banking",x:"NASDAQ",yf:"NCNO",q:[{q:"Q1 FY27",d:"2026-05-27"},{q:"Q2 FY27",d:"2026-08-25"},{q:"Q3 FY27",d:"2026-12-01"}]},/*Q2FY27 REPORTED 2026-08-25 IR*/,/*Q1FY27 confirmed nCino IR 2026-05-14*/
 {t:"REP",n:"Repsol S.A.",s:"Oil&Gas España",x:"BME",q:[{q:"Q1 26",d:"2026-05-07"},{q:"Q2 26",d:"2026-07-23"},{q:"Q3 26",d:"2026-10-29"}]},
 {t:"ALPEK",n:"Alpek SAB",s:"Petroquímicos MX",x:"BMV",q:[{q:"Q1 26",d:"2026-04-23"},{q:"Q2 26",d:"2026-07-23"},{q:"Q3 26",d:"2026-10-22"}]},
 {t:"TSORF",n:"Tesoro Gold",s:"Minería Gold",x:"ASX/OTC",q:[{q:"FY 26",d:"2026-09-17"}]},
@@ -438,26 +439,80 @@ function sv(){if(uf&&dr)dr.child("checks").set(ck);else localStorage.setItem("ia
 // =======================================================================
 //  CMF SCRAPER (multiple proxy fallbacks)
 // =======================================================================
+// Official CMF disclosure dates for 2026, keyed by RUT. Transcribed from
+// cmfchile.cl/institucional/mercados/novedades_envio_fechas_eeff.php (año 2026).
+// Order: [Marzo, Junio, Septiembre, Diciembre] as dd/mm/yyyy, "" when the issuer
+// has no obligation for that quarter. The live scrape overwrites this when it works;
+// the baseline is what keeps the Chilean dates visible when the proxies fail.
+const CMF_BASE={
+  "93834000-5":["07/05/2026","06/08/2026","",""],                          // CENCOSUD
+  "92580000-7":["04/05/2026","03/08/2026","02/11/2026","27/01/2027"],      // ENTEL
+  "83628100-4":["24/04/2026","24/07/2026","",""],                          // SONDA
+  "88745400-0":["29/05/2026","28/08/2026","",""],                          // INMOB. MANQUEHUE
+  "94139000-5":["25/05/2026","31/08/2026","",""],                          // ILC
+  "91144000-8":["28/04/2026","28/07/2026","",""],                          // EMBOT. ANDINA
+  "88006900-4":["29/04/2026","28/07/2026","28/10/2026","27/01/2027"],      // ENGIE ENERGIA CHILE
+  "76672100-1":["28/05/2026","01/09/2026","",""],                          // MULTIEXPORT FOODS
+  "77274820-5":["20/05/2026","","",""],                                    // IAM
+  "90227000-0":["05/05/2026","03/08/2026","",""],                          // VIÑA CONCHA Y TORO
+  "90160000-7":["25/05/2026","28/08/2026","20/11/2026",""],                // CSAV / VAPORES
+  "97006000-6":["30/04/2026","31/07/2026","30/10/2026","26/02/2027"],      // BCI
+  "96556310-5":["14/05/2026","27/08/2026","",""],                          // ANTARCHILE
+  "91643000-0":["18/05/2026","20/08/2026","",""],                          // INV. NUTRAVALOR
+  "94082000-6":["27/05/2026","11/09/2026","",""],                          // INV. SIEMEL
+  "96602640-5":["25/05/2026","31/08/2026","",""],                          // PUERTO VENTANAS
+  "96761990-6":["29/05/2026","11/09/2026","",""]                           // DUNCAN FOX
+};
+
+const pdCMF=s=>{if(!s||s==="-")return"";const p=s.split("/");return p.length===3?p[2]+"-"+p[1].padStart(2,"0")+"-"+p[0].padStart(2,"0"):""};
+
+// Fills Chilean quarters from the baseline. Never overwrites a date already marked
+// as coming from the live CMF scrape, so a fresh scrape always wins.
+function applyCMFBase(){
+  let n=0;
+  P.forEach(co=>{
+    if(!co||!co.cmfRut||!Array.isArray(co.q))return;
+    const row=CMF_BASE[co.cmfRut];
+    if(!row)return;
+    row.forEach((raw,i)=>{
+      const d=pdCMF(raw);
+      if(!d||!co.q[i])return;
+      if(co.q[i]._s==="cmf")return;     // live scrape has priority
+      if(co.q[i].d!==d){co.q[i].d=d;n++}
+      co.q[i]._s="cmfbase";co.q[i].cf=true;
+    });
+  });
+  if(n)console.log(`[cmf] ${n} fechas cargadas de la base oficial local`);
+  return n;
+}
+
 async function fCMF(){
   cmfS="loading";rAS();
   const cmfUrl="https://www.cmfchile.cl/institucional/mercados/novedades_envio_fechas_eeff.php";
   let h=null;
-  // Strategy 1: allorigins /get (returns JSON with contents field — more reliable)
-  try{
-    const r=await fetch("https://api.allorigins.win/get?url="+encodeURIComponent(cmfUrl),{signal:AbortSignal.timeout(10000)});
-    if(r.ok){const j=await r.json();if(j.contents)h=j.contents}
-  }catch(e){console.warn("allorigins/get failed:",e)}
-  // Strategy 2: corsproxy.io (direct)
-  if(!h)try{
-    const r=await fetch("https://corsproxy.io/?"+encodeURIComponent(cmfUrl),{signal:AbortSignal.timeout(10000)});
-    if(r.ok)h=await r.text();
-  }catch(e){console.warn("corsproxy failed:",e)}
-  // Strategy 3: codetabs
-  if(!h)try{
-    const r=await fetch("https://api.codetabs.com/v1/proxy?quest="+encodeURIComponent(cmfUrl),{signal:AbortSignal.timeout(10000)});
-    if(r.ok)h=await r.text();
-  }catch(e){console.warn("codetabs failed:",e)}
-  if(!h){cmfS="error";rAS();rn();return}
+  // Free CORS proxies die and come back constantly, so try several shapes.
+  // 25s timeout: the CMF table is ~1MB and these proxies are slow, not dead.
+  const attempts=[
+    ["allorigins/raw", async()=>{const r=await fetch("https://api.allorigins.win/raw?url="+encodeURIComponent(cmfUrl),{signal:AbortSignal.timeout(25000)});return r.ok?await r.text():null}],
+    ["allorigins/get", async()=>{const r=await fetch("https://api.allorigins.win/get?url="+encodeURIComponent(cmfUrl),{signal:AbortSignal.timeout(25000)});if(!r.ok)return null;const j=await r.json();return j&&j.contents||null}],
+    ["codetabs",       async()=>{const r=await fetch("https://api.codetabs.com/v1/proxy?quest="+encodeURIComponent(cmfUrl),{signal:AbortSignal.timeout(25000)});return r.ok?await r.text():null}],
+    ["thingproxy",     async()=>{const r=await fetch("https://thingproxy.freeboard.io/fetch/"+cmfUrl,{signal:AbortSignal.timeout(25000)});return r.ok?await r.text():null}],
+    ["whateverorigin", async()=>{const r=await fetch("https://www.whateverorigin.org/get?url="+encodeURIComponent(cmfUrl),{signal:AbortSignal.timeout(25000)});if(!r.ok)return null;const j=await r.json();return j&&j.content||null}]
+  ];
+  for(const[name,fn] of attempts){
+    try{
+      const out=await fn();
+      // A valid response must actually contain the table, not a proxy error page
+      if(out&&out.length>5000&&/RUT/i.test(out)){h=out;console.log(`[cmf] datos obtenidos vía ${name} (${(out.length/1024).toFixed(0)} KB)`);break}
+      console.warn(`[cmf] ${name}: respuesta inservible${out?" ("+out.length+" bytes)":" (vacía)"}`);
+    }catch(e){console.warn(`[cmf] ${name} falló:`,e.name||e.message)}
+  }
+  if(!h){
+    // Proxies down: the baseline is already loaded, so say so instead of showing an error
+    cmfS=Object.keys(CMF_BASE).length?"base":"error";
+    console.warn("[cmf] ningún proxy respondió; usando la base oficial local");
+    rAS();rn();return;
+  }
   try{
     const doc=new DOMParser().parseFromString(h,"text/html");
     const rows=doc.querySelectorAll("table tr");
@@ -520,8 +575,8 @@ function lL(){try{const r=localStorage.getItem("ia-e");if(r)ck=JSON.parse(r)}cat
 //  RENDER
 // =======================================================================
 function rAS(){const r=document.getElementById("aR");
-  const cl=cmfS==="ok"?"✓ CMF (chilenas)":cmfS==="loading"?"⟳ CMF...":cmfS==="error"?"✗ CMF":"· CMF";
-  const cc=cmfS==="ok"?"var(--cy)":cmfS==="error"?"var(--rd)":"var(--t4)";
+  const cl=cmfS==="ok"?"✓ CMF (chilenas)":cmfS==="loading"?"⟳ CMF...":cmfS==="base"?"◆ CMF (base oficial local)":cmfS==="error"?"✗ CMF":"· CMF";
+  const cc=cmfS==="ok"?"var(--cy)":cmfS==="base"?"var(--yw)":cmfS==="error"?"var(--rd)":"var(--t4)";
   r.innerHTML=`<span style="color:${cc}">${cl}</span><span style="color:var(--t4)">· Intl: fechas verificadas</span>`}
 
 function bE(){
