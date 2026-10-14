@@ -515,7 +515,7 @@ const CMF_ENT=rut=>`https://www.cmfchile.cl/institucional/mercados/entidad.php?m
 async function fCMFEntidad(rutFull){
   const rut=String(rutFull||"").split("-")[0];
   if(!rut)return null;
-  const got=await cmfProxyGet(CMF_ENT(rut),/Divulgaci/i,2000,20000);
+  const got=await cmfProxyGet(CMF_ENT(rut),/Divulgaci/i,2000,12000);
   if(!got)return null;
   try{
     const doc=new DOMParser().parseFromString(got.html,"text/html");
@@ -537,22 +537,33 @@ async function fCMFGaps(force){
   const targets=P.filter(co=>co&&co.cmfRut&&Array.isArray(co.q)&&(force||co.q.some(q=>!q.d)));
   if(!targets.length){console.log("[cmf] sin huecos que rellenar");return 0}
   console.log(`[cmf] consultando ${targets.length} emisor(es) uno por uno…`);
-  let n=0;
+  let n=0,fails=0,ok=0;
+  const t0=Date.now();
   for(let i=0;i<targets.length;i++){
+    // Circuit breaker: 5 proxies x 12s x 17 issuers is ~17 minutes of nothing.
+    // If the first couple come back empty the proxies are down - stop and say so.
+    if(ok===0&&fails>=2){
+      console.warn("[cmf] los proxies no responden; abortando tras 2 intentos fallidos");
+      cmfS=Object.keys(CMF_BASE).length?"base":"error";
+      const st0=document.getElementById("cmfSt");
+      if(st0){st0.textContent="\u2717 Los proxies CORS no responden. La CMF no se puede leer desde el navegador ahora mismo.";st0.className="add-st err"}
+      rAS();rn();return n;
+    }
+    if(Date.now()-t0>180000){console.warn("[cmf] presupuesto de 3 min agotado");break}
     const co=targets[i];
     cmfS="loading";
     const st=document.getElementById("cmfSt");
-    if(st){st.textContent=`Consultando ${co.t}… (${i+1}/${targets.length})`;st.className="add-st"}
+    if(st){st.textContent=`Consultando ${co.t}\u2026 (${i+1}/${targets.length})`;st.className="add-st"}
     rAS();
     const res=await fCMFEntidad(co.cmfRut);
-    if(res){
+    if(res){ok++;
       res.cells.forEach((raw,k)=>{
         const d=pdCMF(raw);
         if(!d||!co.q[k])return;
         if(co.q[k].d!==d){co.q[k].d=d;n++;console.log(`[cmf] ${co.t} ${co.q[k].q}: ${d}`)}
         co.q[k].cf=true;co.q[k]._s="cmf";
       });
-    }
+    } else fails++;
     rn();
     if(i<targets.length-1)await new Promise(r=>setTimeout(r,1200));
   }
@@ -560,7 +571,8 @@ async function fCMFGaps(force){
     cmfS="ok";
     if(typeof saveVerifiedDates==="function")saveVerifiedDates();
   }
-  console.log(`[cmf] ${n} fecha(s) actualizada(s) desde páginas por emisor`);
+  console.log(`[cmf] ${n} fecha(s) actualizada(s) \u00b7 ${ok} fichas le\u00eddas \u00b7 ${fails} fallidas`);
+  if(ok===0)cmfS=Object.keys(CMF_BASE).length?"base":"error";
   rAS();rn();
   return n;
 }
