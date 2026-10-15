@@ -1,0 +1,49 @@
+name: Actualizar fechas CMF
+
+on:
+  schedule:
+    # 11:30 UTC = 08:30 en Chile (horario de verano) / 07:30 (invierno), lun-vie
+    - cron: '30 11 * * 1-5'
+  workflow_dispatch:
+
+# Evita que dos corridas se pisen entre sí
+concurrency:
+  group: update-cmf
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Leer fichas de la CMF
+        run: node scripts/scrape-cmf.mjs
+
+      - name: Commitear si cambió algo
+        run: |
+          git config user.name "iA CMF Bot"
+          git config user.email "bot@iadriana.cl"
+          git add cmf-fechas.json
+          if git diff --staged --quiet; then
+            echo "Sin cambios en las fechas CMF."
+            exit 0
+          fi
+          git commit -m "CMF: fechas actualizadas $(date +%Y-%m-%d)"
+          # El deploy de Pages puede mover la rama mientras corremos: reintentamos
+          for i in 1 2 3 4 5; do
+            if git pull --rebase origin main && git push; then
+              echo "Push OK en el intento $i"
+              exit 0
+            fi
+            echo "Intento $i falló, reintento en 5s…"
+            sleep 5
+          done
+          echo "No se pudo pushear tras 5 intentos"
+          exit 1
