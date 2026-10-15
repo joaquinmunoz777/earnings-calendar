@@ -426,7 +426,7 @@ const P=[
 // =======================================================================
 //  STATE
 // =======================================================================
-let ck={},cf="all",sq="",db=null,dr=null,uf=false,cmfS="idle",yhS="idle",hiddenTickers=[],vw="table";
+let ck={},cf="all",sq="",db=null,dr=null,uf=false,cmfS="idle",yhS="idle",hiddenTickers=[],vw="table",cmfJsonTs="";
 const MO=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 const fd=d=>{if(!d)return"—";const v=new Date(d+"T12:00:00");return v.getDate()+" "+MO[v.getMonth()]+" "+v.getFullYear()};
 const dt=d=>{if(!d)return 999;const t=new Date;t.setHours(0,0,0,0);return Math.ceil((new Date(d+"T00:00:00")-t)/864e5)};
@@ -486,159 +486,81 @@ function applyCMFBase(){
   return n;
 }
 
-// Single place for the CORS-proxy dance. They die and come back constantly, so we
-// try several shapes and only accept a response that actually looks like the page.
-async function cmfProxyGet(url,needle,minLen,timeout){
-  const t=timeout||20000;
-  const attempts=[
-    ["allorigins/raw", async()=>{const r=await fetch("https://api.allorigins.win/raw?url="+encodeURIComponent(url),{signal:AbortSignal.timeout(t)});return r.ok?await r.text():null}],
-    ["allorigins/get", async()=>{const r=await fetch("https://api.allorigins.win/get?url="+encodeURIComponent(url),{signal:AbortSignal.timeout(t)});if(!r.ok)return null;const j=await r.json();return j&&j.contents||null}],
-    ["codetabs",       async()=>{const r=await fetch("https://api.codetabs.com/v1/proxy?quest="+encodeURIComponent(url),{signal:AbortSignal.timeout(t)});return r.ok?await r.text():null}],
-    ["thingproxy",     async()=>{const r=await fetch("https://thingproxy.freeboard.io/fetch/"+url,{signal:AbortSignal.timeout(t)});return r.ok?await r.text():null}],
-    ["whateverorigin", async()=>{const r=await fetch("https://www.whateverorigin.org/get?url="+encodeURIComponent(url),{signal:AbortSignal.timeout(t)});if(!r.ok)return null;const j=await r.json();return j&&j.content||null}]
-  ];
-  for(const[name,fn] of attempts){
-    try{
-      const out=await fn();
-      if(out&&out.length>minLen&&needle.test(out))return{html:out,via:name};
-      console.warn(`[cmf] ${name}: respuesta inservible${out?" ("+out.length+" bytes)":" (vacía)"}`);
-    }catch(e){console.warn(`[cmf] ${name} falló:`,e.name||e.message)}
-  }
-  return null;
-}
-
-// Per-company "Fechas de divulgación de EEFF" page. Far smaller than the full table
-// (~60 KB vs ~1 MB) and server-rendered, so it survives the proxies much better.
-// One request per issuer also means a single failure doesn't lose everything.
-const CMF_ENT=rut=>`https://www.cmfchile.cl/institucional/mercados/entidad.php?mercado=V&rut=${rut}&grupo=&tipoentidad=RVEMI&row=&vig=VI&control=svs&pestania=101`;
-
-async function fCMFEntidad(rutFull){
-  const rut=String(rutFull||"").split("-")[0];
-  if(!rut)return null;
-  const got=await cmfProxyGet(CMF_ENT(rut),/Divulgaci/i,2000,12000);
-  if(!got)return null;
+// Las fechas chilenas las deja un GitHub Action en cmf-fechas.json, dentro de este
+// mismo repo. Al ser same-origin no hay CORS, ni proxies, ni timeouts: es un fetch
+// a un archivo estático. El Action corre en un servidor, donde sí puede hablarle
+// directamente a la CMF.
+async function fCMF(){
+  cmfS="loading";rAS();
   try{
-    const doc=new DOMParser().parseFromString(got.html,"text/html");
-    const yr=String(new Date().getFullYear());
-    for(const row of doc.querySelectorAll("table tr")){
-      const c=row.querySelectorAll("td");
-      if(c.length<5)continue;
-      if(c[0].textContent.trim()!==yr)continue;
-      return{via:got.via,cells:[1,2,3,4].map(i=>c[i].textContent.trim())};
-    }
-    console.warn(`[cmf] RUT ${rut}: sin fila para ${yr}`);
-  }catch(e){console.warn(`[cmf] RUT ${rut} parse:`,e.message)}
-  return null;
+    // cache-bust: GitHub Pages cachea agresivo y queremos la versión recién commiteada
+    const r=await fetch("cmf-fechas.json?t="+Date.now(),{cache:"no-store",signal:AbortSignal.timeout(15000)});
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    const j=await r.json();
+    const data=j&&j.data||{};
+    const n=applyCMFJson(data);
+    cmfJsonTs=j&&j.updated||"";
+    cmfS=Object.keys(data).length?"ok":"base";
+    console.log(`[cmf] cmf-fechas.json leído · ${Object.keys(data).length} emisores · ${n} fecha(s) aplicada(s) · generado ${cmfJsonTs}`);
+  }catch(e){
+    // Todavía no existe el archivo (primer deploy) o la red falló: queda la base local
+    console.warn("[cmf] no se pudo leer cmf-fechas.json:",e.message,"— se usa la base local");
+    cmfS=Object.keys(CMF_BASE).length?"base":"error";
+  }
+  rAS();rn();
 }
 
-// Fills quarters the big table didn't cover. Only touches issuers with a gap, which
-// keeps the request count low; `force` re-reads every Chilean issuer.
-async function fCMFGaps(force){
-  const targets=P.filter(co=>co&&co.cmfRut&&Array.isArray(co.q)&&(force||co.q.some(q=>!q.d)));
-  if(!targets.length){console.log("[cmf] sin huecos que rellenar");return 0}
-  console.log(`[cmf] consultando ${targets.length} emisor(es) uno por uno…`);
-  let n=0,fails=0,ok=0;
-  const t0=Date.now();
-  for(let i=0;i<targets.length;i++){
-    // Circuit breaker: 5 proxies x 12s x 17 issuers is ~17 minutes of nothing.
-    // If the first couple come back empty the proxies are down - stop and say so.
-    if(ok===0&&fails>=2){
-      console.warn("[cmf] los proxies no responden; abortando tras 2 intentos fallidos");
-      cmfS=Object.keys(CMF_BASE).length?"base":"error";
-      const st0=document.getElementById("cmfSt");
-      if(st0){st0.textContent="\u2717 Los proxies CORS no responden. La CMF no se puede leer desde el navegador ahora mismo.";st0.className="add-st err"}
-      rAS();rn();return n;
-    }
-    if(Date.now()-t0>180000){console.warn("[cmf] presupuesto de 3 min agotado");break}
-    const co=targets[i];
-    cmfS="loading";
-    const st=document.getElementById("cmfSt");
-    if(st){st.textContent=`Consultando ${co.t}\u2026 (${i+1}/${targets.length})`;st.className="add-st"}
-    rAS();
-    const res=await fCMFEntidad(co.cmfRut);
-    if(res){ok++;
-      res.cells.forEach((raw,k)=>{
-        const d=pdCMF(raw);
-        if(!d||!co.q[k])return;
-        if(co.q[k].d!==d){co.q[k].d=d;n++;console.log(`[cmf] ${co.t} ${co.q[k].q}: ${d}`)}
-        co.q[k].cf=true;co.q[k]._s="cmf";
-      });
-    } else fails++;
-    rn();
-    if(i<targets.length-1)await new Promise(r=>setTimeout(r,1200));
-  }
-  if(n){
-    cmfS="ok";
-    if(typeof saveVerifiedDates==="function")saveVerifiedDates();
-  }
-  console.log(`[cmf] ${n} fecha(s) actualizada(s) \u00b7 ${ok} fichas le\u00eddas \u00b7 ${fails} fallidas`);
-  if(ok===0)cmfS=Object.keys(CMF_BASE).length?"base":"error";
-  rAS();rn();
+// Vuelca el JSON sobre el portafolio. Solo trae emisores que el scraper leyó bien,
+// así que la ausencia de un RUT significa "sin dato", no "sin fecha".
+function applyCMFJson(data){
+  let n=0;
+  P.forEach(co=>{
+    if(!co||!co.cmfRut||!Array.isArray(co.q))return;
+    const rec=data[co.cmfRut];
+    if(!rec||!Array.isArray(rec.q))return;
+    rec.q.forEach((d,i)=>{
+      if(!co.q[i])return;
+      if(d){
+        if(co.q[i].d!==d){co.q[i].d=d;n++}
+        co.q[i].cf=true;co.q[i]._s="cmf";
+      } else if(co.q[i]._s==="cmfbase"||co.q[i]._s==="cmf"){
+        // El scraper leyó este emisor y la CMF no tiene fecha para el trimestre:
+        // limpiamos lo que venía de la CMF (base vieja incluida) para no arrastrar
+        // un dato que ya no existe. Una fecha puesta a mano no se toca.
+        if(co.q[i].d){co.q[i].d="";n++}
+      }
+    });
+  });
   return n;
 }
 
-// Manual trigger from Configuración
+// Botón manual: simplemente vuelve a leer el JSON
 async function refreshCMF(){
   const btn=document.getElementById("cmfBtn"),st=document.getElementById("cmfSt");
   if(btn)btn.disabled=true;
-  try{
-    const n=await fCMFGaps(true);
-    if(st){st.textContent=n?`✓ ${n} fecha(s) actualizada(s) desde la CMF.`:"✓ Sin cambios: la CMF no ha publicado fechas nuevas.";st.className="add-st ok"}
-  }catch(e){
-    if(st){st.textContent="✗ Error: "+(e.message||e);st.className="add-st err"}
+  if(st){st.textContent="Leyendo cmf-fechas.json…";st.className="add-st"}
+  await fCMF();
+  if(st){
+    st.textContent=cmfS==="ok"
+      ? `✓ Fechas CMF al día (generadas ${cmfTsLabel()}).`
+      : "⚠ No se pudo leer cmf-fechas.json. ¿Ya corrió el Action al menos una vez?";
+    st.className="add-st "+(cmfS==="ok"?"ok":"err");
   }
   if(btn)btn.disabled=false;
   renderCfg();
 }
 
-async function fCMF(){
-  cmfS="loading";rAS();
-  const cmfUrl="https://www.cmfchile.cl/institucional/mercados/novedades_envio_fechas_eeff.php";
-  const got=await cmfProxyGet(cmfUrl,/RUT/i,5000,25000);
-  const h=got&&got.html;
-  if(got)console.log(`[cmf] tabla completa vía ${got.via} (${(h.length/1024).toFixed(0)} KB)`);
-  if(!h){
-    // Big table unreachable. The baseline covers what we transcribed, but it ages:
-    // go issuer by issuer to pick up anything the CMF published since.
-    console.warn("[cmf] tabla completa inaccesible; probando páginas por emisor");
-    const n=await fCMFGaps(false);
-    if(!n)cmfS=Object.keys(CMF_BASE).length?"base":"error";
-    rAS();rn();return;
-  }
+function cmfTsLabel(){
+  if(!cmfJsonTs)return "—";
   try{
-    const doc=new DOMParser().parseFromString(h,"text/html");
-    const rows=doc.querySelectorAll("table tr");
-    const cd={};
-    rows.forEach(row=>{const c=row.querySelectorAll("td");if(c.length>=6){
-      const nm=c[0].textContent.trim().toUpperCase(),rut=c[1].textContent.trim();
-      cd[rut]={nm,q1:c[2].textContent.trim(),q2:c[3].textContent.trim(),q3:c[4].textContent.trim(),fy:c[5].textContent.trim()};
-    }});
-    const pd=s=>{if(!s||s==="-")return"";const p=s.split("/");return p.length===3?p[2]+"-"+p[1].padStart(2,"0")+"-"+p[0].padStart(2,"0"):""};
-    let m=0;
-    P.forEach(co=>{
-      if(!co.cmfRut&&!co.cmfName)return;
-      let e=co.cmfRut?cd[co.cmfRut]:null;
-      if(!e&&co.cmfName){const up=co.cmfName.toUpperCase();for(const[,v]of Object.entries(cd)){if(v.nm.includes(up)||up.includes(v.nm)){e=v;break}}}
-      if(e){m++;const ds=[pd(e.q1),pd(e.q2),pd(e.q3),pd(e.fy)];
-        co.q.forEach((q,i)=>{if(ds[i]){q.d=ds[i];q.cf=true;q._s="cmf"}});}
-    });
-    cmfS="ok";
-    if(uf&&dr)dr.child("cache/cmf").set({ts:Date.now(),data:cd});
-    // The big table omits issuers that haven't filed yet; their own page may have it
-    if(P.some(co=>co&&co.cmfRut&&Array.isArray(co.q)&&co.q.some(q=>!q.d)))setTimeout(()=>fCMFGaps(false),1500);
-  }catch(e){console.warn("CMF parse:",e);cmfS="error"}
-  rAS();rn();
+    const d=new Date(cmfJsonTs),hoy=new Date();
+    const dias=Math.floor((hoy-d)/86400000);
+    if(dias===0)return "hoy";
+    if(dias===1)return "ayer";
+    return `hace ${dias}d`;
+  }catch(e){return "—"}
 }
 
-// =======================================================================
-//  INTL: fechas hardcodeadas, verificadas manualmente
-//  Para actualizar: pide a Claude que verifique las fechas
-// =======================================================================
-async function fYH(){ yhS="ok"; rAS(); rn(); }
-
-// =======================================================================
-//  FIREBASE
-// =======================================================================
 function iF(){
   if(!FB.apiKey||!FB.databaseURL){sC("local");lL();loadCustomTickers();rn();return}
   try{firebase.initializeApp(FB);db=firebase.database();dr=db.ref("earnings-tracker");uf=true;sC("connecting");
@@ -659,17 +581,20 @@ function iF(){
     });
     dr.child("emailjs-config").on("value",s=>{const c=s.val();if(c){EJ.serviceId=c.serviceId||"";EJ.templateId=c.templateId||"";EJ.publicKey=c.publicKey||"";if(c.emails&&c.emails.length)ALERT_EMAILS=c.emails;if(typeof c.alertPrev==="boolean")alertPrevDay=c.alertPrev;if(c.testEmail)TEST_EMAIL=c.testEmail;if(typeof c.alertsOn==="boolean")alertsEnabled=c.alertsOn}});
   }catch(e){sC("local");lL();loadCustomTickers();rn()}}
+
 function sC(s){const d=document.getElementById("cD"),t=document.getElementById("cT");
   if(s==="ok"){d.style.background="var(--gn)";t.textContent="Firebase conectado";t.style.color="var(--gn)"}
   else if(s==="connecting"){d.style.background="var(--yw)";t.textContent="Conectando...";t.style.color="var(--yw)"}
   else{d.style.background="var(--t3)";t.textContent="Modo local";t.style.color="var(--t3)"}}
+
 function lL(){try{const r=localStorage.getItem("ia-e");if(r)ck=JSON.parse(r)}catch(e){}}
 
-// =======================================================================
-//  RENDER
-// =======================================================================
+
+async function fYH(){ yhS="ok"; rAS(); rn(); }
+
+
 function rAS(){const r=document.getElementById("aR");
-  const cl=cmfS==="ok"?"✓ CMF (chilenas)":cmfS==="loading"?"⟳ CMF...":cmfS==="base"?"◆ CMF (base oficial local)":cmfS==="error"?"✗ CMF":"· CMF";
+  const cl=cmfS==="ok"?"✓ CMF ("+cmfTsLabel()+")":cmfS==="loading"?"⟳ CMF...":cmfS==="base"?"◆ CMF (base local)":cmfS==="error"?"✗ CMF":"· CMF";
   const cc=cmfS==="ok"?"var(--cy)":cmfS==="base"?"var(--yw)":cmfS==="error"?"var(--rd)":"var(--t4)";
   r.innerHTML=`<span style="color:${cc}">${cl}</span><span style="color:var(--t4)">· Intl: fechas verificadas</span>`}
 
@@ -907,12 +832,12 @@ function renderCfg(){
   </div>
   <div style="margin-top:24px;border-top:1px solid var(--bd);padding-top:20px">
     <div class="cfg-hdr"><h2>Fechas CMF (chilenas)</h2><span class="cfg-count">${cmfS==="ok"?"Scrape en vivo":cmfS==="base"?"Base oficial local":"—"}</span></div>
-    <p style="font-size:11px;color:var(--t3);margin-bottom:12px;line-height:1.5">Las fechas chilenas vienen de la CMF. Si los proxies fallan, la app usa una base oficial local que puede quedar desfasada cuando la CMF publica un trimestre nuevo. Este botón consulta la ficha de cada emisor una por una y rellena lo que falte.</p>
-    <div class="add-form"><h3>ACTUALIZAR DESDE LA CMF</h3>
+    <p style="font-size:11px;color:var(--t3);margin-bottom:12px;line-height:1.5">Un GitHub Action lee las fichas de la CMF cada día hábil y deja el resultado en <code style="color:var(--t2)">cmf-fechas.json</code>. La página lo lee desde su propio dominio, así que no hay proxies ni CORS de por medio.</p>
+    <div class="add-form"><h3>FECHAS DESDE LA CMF</h3>
       <div class="add-row">
-        <button class="add-btn" onclick="refreshCMF()" id="cmfBtn">Consultar CMF ahora</button>
+        <button class="add-btn" onclick="refreshCMF()" id="cmfBtn">Releer cmf-fechas.json</button>
       </div>
-      <div class="add-st" id="cmfSt">Consulta la ficha de los ${P.filter(c=>c&&c.cmfRut).length} emisores chilenos. Tarda ~30s.</div>
+      <div class="add-st" id="cmfSt">${cmfS==="ok"?`✓ ${P.filter(c=>c&&c.cmfRut).length} emisores chilenos · datos generados ${cmfTsLabel()}`:"Sin datos del Action todavía — se está usando la base local."}</div>
     </div>
   </div>
   <div style="margin-top:24px;border-top:1px solid var(--bd);padding-top:20px">
